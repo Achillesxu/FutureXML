@@ -259,7 +259,7 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
     :param name_tuple:
     :param video_dir_list: 可能的情况，单个文件夹，或者是多个目录
     :param target_dir:
-    :param x_p:
+    :param xml_p:
     :return:
     """
 
@@ -276,22 +276,12 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
         big_poster_pic = 'h_' + big_poster_pic
         # have_same_pic = 1
 
-    #
-    # if not os.path.exists('{}/{}'.format(target_dir, small_poster_pic)):
-    #     pic_file_download(name_tuple.small_poster, small_poster_pic, target_dir)
-    # if not os.path.exists('{}/{}'.format(target_dir, medium_poster_pic)):
-    #     pic_file_download(name_tuple.medium_poster, medium_poster_pic, target_dir)
-    # if not os.path.exists('{}/{}'.format(target_dir, big_poster_pic)):
-    #     pic_file_download(name_tuple.big_poster, big_poster_pic, target_dir)
     i_p_program_name = remove_number_in_name(name_tuple.p_program_name)
 
     if name_tuple.p_m_src_url:
         video_name = get_http_file_name(name_tuple.p_m_src_url)
     else:
         file_log.error('{}-{}-{} 找不到视频文件链接'.format(name_tuple.name, name_tuple.p_part_num, name_tuple.p_program_name))
-        # return '{}/{}'.format(target_dir, small_poster_pic) if small_poster_pic else '', \
-        #        '{}/{}'.format(target_dir, medium_poster_pic) if medium_poster_pic else '', \
-        #        '{}/{}'.format(target_dir, big_poster_pic) if big_poster_pic else '', 'ng'
         return 'ng'
 
     program_dir_dict = OrderedDict()
@@ -305,9 +295,6 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
             if ret_video_name == video_width == video_height == video_bit_rate:
                 file_log.error('解析--{}--出错'.format(video_path_name))
                 continue
-                # return '{}/{}'.format(target_dir, small_poster_pic) if small_poster_pic else '', \
-                #        '{}/{}'.format(target_dir, medium_poster_pic) if medium_poster_pic else '', \
-                #        '{}/{}'.format(target_dir, big_poster_pic) if big_poster_pic else '', 'ng'
             else:
                 suffix_d = os.path.basename(video_dir)
                 program_dir_dict['{}/{}_{}'.format(target_dir, suffix_d, name_tuple.p_program_name)] = \
@@ -317,9 +304,6 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
             continue
 
     if len(program_dir_dict) == 0:
-        # return '{}/{}'.format(target_dir, small_poster_pic) if small_poster_pic else '', \
-        #        '{}/{}'.format(target_dir, medium_poster_pic) if medium_poster_pic else '', \
-        #        '{}/{}'.format(target_dir, big_poster_pic) if big_poster_pic else '', 'ng'
         return 'ng'
 
     for program_dir in program_dir_dict.keys():
@@ -332,49 +316,6 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
         mv_files_to_dir(program_dir_dict[program_dir][0],
                         '{}/{}'.format(program_dir, program_dir_dict[program_dir][1]))
 
-        # thread_list = []
-
-        # if have_same_pic == 1:
-        # if not os.path.exists('{}/{}'.format(target_dir, small_poster_pic)):
-        #     small_t = threading.Thread(target=pic_file_download,
-        #                                args=(name_tuple.small_poster, small_poster_pic, target_dir))
-        #     small_t.start()
-        #     thread_list.append(small_t)
-        #     # small_t.join()
-        #     # pic_file_download(name_tuple.small_poster, small_poster_pic, target_dir)
-        # else:
-        # if not os.path.exists('{}/{}'.format(target_dir, small_poster_pic)):
-        #     small_t = threading.Thread(target=pic_file_download,
-        #                                args=(name_tuple.small_poster, small_poster_pic, target_dir))
-        #     small_t.start()
-        #     thread_list.append(small_t)
-        #     # small_t.join()
-        #     # pic_file_download(name_tuple.small_poster, small_poster_pic, target_dir)
-        # if not os.path.exists('{}/{}'.format(target_dir, medium_poster_pic)):
-        #     medium_t = threading.Thread(target=pic_file_download,
-        #                                 args=(name_tuple.medium_poster, medium_poster_pic, target_dir))
-        #     medium_t.start()
-        #     thread_list.append(medium_t)
-        #     # medium_t.join()
-        #     # pic_file_download(name_tuple.medium_poster, medium_poster_pic, target_dir)
-        # if not os.path.exists('{}/{}'.format(target_dir, big_poster_pic)):
-        #     big_t = threading.Thread(target=pic_file_download,
-        #                              args=(name_tuple.big_poster, big_poster_pic, target_dir))
-        #     big_t.start()
-        #     thread_list.append(big_t)
-        #     # big_t.join()
-        #     # pic_file_download(name_tuple.big_poster, big_poster_pic, target_dir)
-
-    # if len(thread_list) > 0:
-    #     for t_l in thread_list:
-    #         t_l.join()
-
-    # if have_same_pic == 1 and os.path.exists('{}/{}'.format(target_dir, small_poster_pic)):
-    #     copy_file_to_dir('{}/{}'.format(target_dir, small_poster_pic),
-    #                      '{}/{}'.format(target_dir, medium_poster_pic))
-    #     copy_file_to_dir('{}/{}'.format(target_dir, small_poster_pic),
-    #                      '{}/{}'.format(target_dir, big_poster_pic))
-
     small_ext = small_poster_pic.split('.')[1]
     medium_ext = medium_poster_pic.split('.')[1]
     big_ext = big_poster_pic.split('.')[1]
@@ -386,29 +327,10 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
         download_dict['{}/h_{}.{}'.format(program_dir, i_p_program_name, big_ext)] = name_tuple.big_poster
         pic_file_download_txt(download_dict, program_dir)
 
-        # if os.path.exists('{}/{}'.format(target_dir, small_poster_pic)):
-        #     copy_file_to_dir('{}/{}'.format(target_dir, small_poster_pic),
-        #                      '{}/s_{}.{}'.format(program_dir, i_p_program_name, small_ext))
-        # else:
-        #     file_log.error('{}-smallPoster-{}下载失败'.format(name_tuple.name, name_tuple.small_poster))
-        # if os.path.exists('{}/{}'.format(target_dir, medium_poster_pic)):
-        #     copy_file_to_dir('{}/{}'.format(target_dir, medium_poster_pic),
-        #                      '{}/m_{}.{}'.format(program_dir, i_p_program_name, medium_ext))
-        # else:
-        #     file_log.error('{}-poster-{}下载失败'.format(name_tuple.name, name_tuple.medium_poster))
-        # if os.path.exists('{}/{}'.format(target_dir, big_poster_pic)):
-        #     copy_file_to_dir('{}/{}'.format(target_dir, big_poster_pic),
-        #                      '{}/h_{}.{}'.format(program_dir, i_p_program_name, big_ext))
-        # else:
-        #     file_log.error('{}-bigPoster-{}下载失败'.format(name_tuple.name, name_tuple.big_poster))
-        a_id = xml_p.get_ascend_id()
-        write_xml_to_target_dir(name_tuple, a_id, program_dir_dict[program_dir][1],
+        write_xml_to_target_dir(name_tuple, 'test', program_dir_dict[program_dir][1],
                                 program_dir_dict[program_dir][2], program_dir_dict[program_dir][3],
                                 program_dir_dict[program_dir][4], program_dir, i_p_program_name, big_ext)
-        xml_p.ascend_id()
 
-    # return '{}/{}'.format(target_dir, small_poster_pic), '{}/{}'.format(target_dir, medium_poster_pic), \
-    #        '{}/{}'.format(target_dir, big_poster_pic), 'ok'
     return 'ok'
 
 

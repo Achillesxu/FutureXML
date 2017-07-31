@@ -140,6 +140,10 @@ def copy_file_to_dir(src, dst):
     except IOError:
         logging.error(traceback.format_exc())
 
+
+def judge_contain_chinese_chr(in_str):
+    return any(0x4E00 <= ord(x) <= 0x9FFF for x in in_str)
+
 R_pattern = r'_\d+x\d+_\d+k.'
 F_name = 'sd_zy_zzxe10_20120807_1280x720_1500k.ts'
 
@@ -164,7 +168,6 @@ if __name__ == '__main__':
     # print('ok')
     # print((freeproxy.read_proxies()))
     # rename_file_bat(sys.argv[1])
-    vi_file = 'D:\\Castlevania.S01E01.mp4'
-    get_resolution_bit_rate_new_name(vi_file, 'test')
-
-
+    # vi_file = 'D:\\Castlevania.S01E01.mp4'
+    # get_resolution_bit_rate_new_name(vi_file, 'test')
+    print(judge_contain_chinese_chr('xx'))

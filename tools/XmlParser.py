@@ -21,7 +21,7 @@ from lxml.etree import iterparse, ElementTree
 
 __author__ = 'achilles_xushy'
 
-INPUT_FILE = 'C:\\Users\\admins\\Desktop\\20170215\\fullData20170215.xml'
+INPUT_FILE = 'C:\\Users\\admins\\Desktop\\20170721\\fullData20170721.xml'
 
 
 class XmlParser(object):
@@ -34,6 +34,7 @@ class XmlParser(object):
         self.id = ''
         self.name = ''
         self.program_class = ''
+        self.desc = ''
         self.tag = ''
         self.director = ''
         self.leading_role = ''
@@ -42,6 +43,8 @@ class XmlParser(object):
         self.small_poster = ''
         self.medium_poster = ''
         self.big_poster = ''
+        self.update_time = ''
+        self.total_count = ''
 
         self.p_program_series_id = ''
         self.p_program_id = ''
@@ -79,6 +82,8 @@ class XmlParser(object):
             self.name = i_node.find('name').text
         if i_node.find('programClass') is not None:
             self.program_class = i_node.find('programClass').text
+        if i_node.find('desc') is not None:
+            self.desc = i_node.find('desc').text
         if i_node.find('tag') is not None:
             self.tag = i_node.find('tag').text
         if i_node.find('director') is not None:
@@ -95,6 +100,10 @@ class XmlParser(object):
             self.medium_poster = i_node.find('poster').text
         if i_node.find('bigPoster') is not None:
             self.big_poster = i_node.find('bigPoster').text
+        if i_node.find('updateTime') is not None:
+            self.update_time = i_node.find('updateTime').text
+        if i_node.find('programTotalCount') is not None:
+            self.total_count = i_node.find('programTotalCount').text
 
     @staticmethod
     def get_program_node_list(i_node):
@@ -138,9 +147,10 @@ class XmlParser(object):
                 self.p_m_src_url = media_node.find('srcUrl').text
 
     def output_parameter(self):
-        program = namedtuple('program', ['id', 'name', 'program_class', 'tag',
+        program = namedtuple('program', ['id', 'name', 'program_class', 'desc', 'tag',
                                          'director', 'leading_role', 'years', 'zone', 'small_poster', 'medium_poster',
-                                         'big_poster', 'p_program_series_id', 'p_program_id', 'p_program_name',
+                                         'big_poster', 'update_time', 'total_count',
+                                         'p_program_series_id', 'p_program_id', 'p_program_name',
                                          'p_program_desc', 'p_part_num', 'p_program_length', 'p_m_src_url'])
 
         if self.p_program_definition:
@@ -148,13 +158,13 @@ class XmlParser(object):
                 self.p_program_name = self.p_program_name[len('[' + self.p_program_definition + ']'):]
 
         self.p_program_name = self.p_program_name.replace('/', '-')
+        self.update_time = self.update_time.split(' ')[0].replace('-', '')
 
-        out_put = program(self.id, self.name, self.program_class, self.tag,
-                          self.director, self.leading_role, self.years, self.zone, self.small_poster,
-                          self.medium_poster, self.big_poster,
-                          self.p_program_series_id, self.p_program_id,
-                          self.p_program_name, self.p_program_desc, self.p_part_num,
-                          self.p_program_length, self.p_m_src_url)
+        out_put = program(self.id, self.name, self.program_class, self.desc, self.tag,
+                          self.director, self.leading_role, self.years, self.zone, self.small_poster, self.medium_poster,
+                          self.big_poster, self.update_time, self.total_count,
+                          self.p_program_series_id, self.p_program_id, self.p_program_name,
+                          self.p_program_desc, self.p_part_num, self.p_program_length, self.p_m_src_url)
 
         return out_put
 
@@ -181,6 +191,7 @@ class XmlParser(object):
         self.id = ''
         self.name = ''
         self.program_class = ''
+        self.desc = ''
         self.tag = ''
         self.director = ''
         self.leading_role = ''
@@ -189,6 +200,8 @@ class XmlParser(object):
         self.small_poster = ''
         self.medium_poster = ''
         self.big_poster = ''
+        self.update_time = ''
+        self.total_count = ''
 
         self.p_program_series_id = ''
         self.p_program_id = ''
@@ -282,23 +295,23 @@ class XMLParserCateSer(object):
 
 
 if __name__ == '__main__':
-    # x_p = XmlParser()
-    # ret = x_p.test_xml_file_valid(INPUT_FILE)
-    # if ret:
-    #     for node in x_p.get_next_program_serial_node():
-    #         x_p.get_program_serial_info(node)
-    #         children = x_p.get_program_node_list(node)
-    #         node_cnt = 0
-    #         if children:
-    #             for child in children:
-    #                 x_p.get_program_info(child)
-    #                 name_t = x_p.output_parameter()
-    #                 print(name_t)
-    #                 node_cnt += 1
-    #                 print(node_cnt)
-    #         sys.exit()
-    # else:
-    #     print('file invalid')
+    x_p = XmlParser()
+    ret = x_p.test_xml_file_valid(INPUT_FILE)
+    if ret:
+        for node in x_p.get_next_program_serial_node():
+            x_p.get_program_serial_info(node)
+            children = x_p.get_program_node_list(node)
+            node_cnt = 0
+            if children:
+                for child in children:
+                    x_p.get_program_info(child)
+                    name_t = x_p.output_parameter()
+                    print(name_t)
+                    node_cnt += 1
+                    print(node_cnt)
+            sys.exit()
+    else:
+        print('file invalid')
     # file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
     # x_pc = XMLParserCategory()
     # ret_v = x_pc.check_xml_file_valid(file_in)
@@ -310,17 +323,24 @@ if __name__ == '__main__':
     #     print('item list len <{}>'.format(len(x_pc.cat_item_list)))
     # else:
     #     print('bad op!')
-    start_time = time.perf_counter()
-    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat2ser20170721.xml'
-    x_pc = XMLParserCateSer()
-    ret_v = x_pc.check_xml_file_valid(file_in)
-    if ret_v:
-        for x_i in x_pc.get_next_cate_item_node():
-            x_pc.get_cate_item_node(x_i)
-        for k, v in x_pc.big_dict.items():
-            print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-        print('item list len <{}>'.format(len(x_pc.big_dict)))
-    else:
-        print('bad op!')
-    end_time = time.perf_counter()
-    print('used time {}'.format(end_time - start_time))
+
+    # start_time = time.perf_counter()
+    # file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
+    # x_pc = XMLParserCategory()
+    # ret_v = x_pc.check_xml_file_valid(file_in)
+    # if ret_v:
+    #     for x_i in x_pc.get_next_cate_item_node():
+    #         x_pc.get_cate_item_node(x_i)
+    #     for i in x_pc.cat_item_list:
+    #         if int(i.parent_id) == 1:
+    #             print(i)
+    #             for j in x_pc.cat_item_list:
+    #                 if i.id == j.parent_id:
+    #                     print('\t{}'.format(j))
+    #     # for k, v in x_pc.big_dict.items():
+    #     #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+    #     # print('item list len <{}>'.format(len(x_pc.big_dict)))
+    # else:
+    #     print('bad op!')
+    # end_time = time.perf_counter()
+    # print('used time {}'.format(end_time - start_time))

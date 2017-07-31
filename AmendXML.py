@@ -142,12 +142,9 @@ def parse_main_entrance(in_param):
                     name_tuple = x_p.output_parameter()
                     # small_poster_name, medium_poster_name, big_poster_name,\
                     res_yield = yield_target_xml_file(name_tuple, v_dir_list, ret_dict['target_dir'], x_p)
-                    x_p.restore_inner_program_variables()
                     if res_yield == 'ok':
-                        parent_sign = True
                         program_cnt += 1
                         logging.info('节目计数 {} 节目名：{}'.format(program_cnt, name_tuple.p_program_name))
-
             x_p.restore_inner_all_variables()
 
     else:
