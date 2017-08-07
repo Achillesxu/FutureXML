@@ -1,4 +1,19 @@
 {
-  "video_dir": ["C:/Users/admins/Desktop/20170215/", "C:/Users/admins/Desktop/20170217/"],
-  "target_dir": "C:/Users/admins/Desktop/20170216"
+  "video_dir": ["C:/Users/admins/Desktop/20170721_v"],
+  "target_dir": "C:/Users/admins/Desktop/20170216",
+  "full_data_xml": "C:/Users/admins/Desktop/20170721/fullData20170721.xml",
+  "category_xml": "C:/Users/admins/Desktop/20170721/cat20170721.xml",
+  "category_serial_xml": "C:/Users/admins/Desktop/20170721/cat2ser20170721.xml",
+  "META_TYPE_DICT": {
+    "央视新闻": [4, "新闻"],
+    "高清电影": [1, "电影"],
+    "电视剧": [2, "电视剧"],
+    "体育": [4, "体育"],
+    "综艺": [4, "综艺"],
+    "纪录片": [2, "纪录片"],
+    "爱看动漫": [2, "动漫"],
+    "未来教育": [2, "教育"],
+    "少儿": [4, "少儿"],
+    "曲艺": [2, "曲艺"]
+  }
 }

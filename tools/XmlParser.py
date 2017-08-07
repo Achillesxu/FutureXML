@@ -56,7 +56,9 @@ class XmlParser(object):
 
         self.p_m_src_url = ''
 
-    def test_xml_file_valid(self, xml_file):
+        self.programs_dict = {}
+
+    def check_xml_file_valid(self, xml_file):
         self.xml_file_name = xml_file
         is_exist = os.path.exists(self.xml_file_name)
         suffix = os.path.basename(self.xml_file_name).split('.')[1]
@@ -217,7 +219,10 @@ class XmlParser(object):
 class XMLParserCategory(object):
     def __init__(self):
         self.xml_file_name = ''
-        self.cat_item_list = []
+        self.cat_dict = {}
+        self.p_cat_list = []
+        self.p_cat_dict = {}
+        self.c_cat_list = []
 
     def check_xml_file_valid(self, xml_file):
         self.xml_file_name = xml_file
@@ -250,8 +255,21 @@ class XMLParserCategory(object):
 
         cat_item = namedtuple('cat_item', ['id', 'name', 'parent_id'])
         one_item = cat_item(c_id, c_name, c_parent_id)
-        if int(one_item.parent_id) > 0:
-            self.cat_item_list.append(one_item)
+        if int(one_item.parent_id) == 1:
+            self.p_cat_list.append(one_item)
+        elif int(one_item.parent_id) > 1:
+            self.c_cat_list.append(one_item)
+        else:
+            pass
+
+    def get_cat_dict(self):
+        for it in self.get_next_cate_item_node():
+            self.get_cate_item_node(it)
+        for i in self.c_cat_list:
+            for j in self.p_cat_list:
+                self.p_cat_dict[j.id] = j.name
+                if i.parent_id == j.id:
+                    self.cat_dict[i.id] = (j.id, j.name)
 
 
 class XMLParserCateSer(object):
@@ -293,54 +311,43 @@ class XMLParserCateSer(object):
                 i_name = ''
             self.big_dict.update({i_id: (i_name, c_id)})
 
+    def get_cat_dict(self):
+        for it in self.get_next_cate_item_node():
+            self.get_cate_item_node(it)
+
 
 if __name__ == '__main__':
-    x_p = XmlParser()
-    ret = x_p.test_xml_file_valid(INPUT_FILE)
-    if ret:
-        for node in x_p.get_next_program_serial_node():
-            x_p.get_program_serial_info(node)
-            children = x_p.get_program_node_list(node)
-            node_cnt = 0
-            if children:
-                for child in children:
-                    x_p.get_program_info(child)
-                    name_t = x_p.output_parameter()
-                    print(name_t)
-                    node_cnt += 1
-                    print(node_cnt)
-            sys.exit()
-    else:
-        print('file invalid')
-    # file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
-    # x_pc = XMLParserCategory()
-    # ret_v = x_pc.check_xml_file_valid(file_in)
-    # if ret_v:
-    #     for x_i in x_pc.get_next_cate_item_node():
-    #         x_pc.get_cate_item_node(x_i)
-    #     for i in x_pc.cat_item_list:
-    #         print(i)
-    #     print('item list len <{}>'.format(len(x_pc.cat_item_list)))
+    # x_p = XmlParser()
+    # ret = x_p.test_xml_file_valid(INPUT_FILE)
+    # if ret:
+    #     for node in x_p.get_next_program_serial_node():
+    #         x_p.get_program_serial_info(node)
+    #         children = x_p.get_program_node_list(node)
+    #         node_cnt = 0
+    #         if children:
+    #             for child in children:
+    #                 x_p.get_program_info(child)
+    #                 name_t = x_p.output_parameter()
+    #                 print(name_t)
+    #                 node_cnt += 1
+    #                 print(node_cnt)
+    #         sys.exit()
     # else:
-    #     print('bad op!')
+    #     print('file invalid')
 
-    # start_time = time.perf_counter()
-    # file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
-    # x_pc = XMLParserCategory()
-    # ret_v = x_pc.check_xml_file_valid(file_in)
-    # if ret_v:
-    #     for x_i in x_pc.get_next_cate_item_node():
-    #         x_pc.get_cate_item_node(x_i)
-    #     for i in x_pc.cat_item_list:
-    #         if int(i.parent_id) == 1:
-    #             print(i)
-    #             for j in x_pc.cat_item_list:
-    #                 if i.id == j.parent_id:
-    #                     print('\t{}'.format(j))
-    #     # for k, v in x_pc.big_dict.items():
-    #     #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-    #     # print('item list len <{}>'.format(len(x_pc.big_dict)))
-    # else:
-    #     print('bad op!')
-    # end_time = time.perf_counter()
-    # print('used time {}'.format(end_time - start_time))
+    start_time = time.perf_counter()
+    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
+    x_pc = XMLParserCategory()
+    ret_v = x_pc.check_xml_file_valid(file_in)
+    if ret_v:
+        x_pc.get_cat_dict()
+        for k, v in x_pc.cat_dict.items():
+            print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+        print('item list len <{}>'.format(len(x_pc.cat_dict)))
+        # for k, v in x_pc.big_dict.items():
+        #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+        # print('item list len <{}>'.format(len(x_pc.big_dict)))
+    else:
+        print('bad op!')
+    end_time = time.perf_counter()
+    print('used time {}'.format(end_time - start_time))

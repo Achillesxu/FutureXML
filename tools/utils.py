@@ -24,10 +24,6 @@ import subprocess
 import json
 import re
 
-__author__ = 'achilles_xushiyin'
-
-SIZE_TYPE = ['small', 'medium', 'big']
-
 sample_url = 'http://images.center.bcs.ottcn.com:8080/poster/2016-12-14/996b4cb5ec0647749db058877ea1eefc.jpg'
 sample_file = 'C:\\Users\\admins\\Desktop\\20170215\\sd_zy_aphts_20111011_1280x720_2500k.ts'
 

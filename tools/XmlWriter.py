@@ -15,41 +15,23 @@
 import logging
 from collections import OrderedDict, namedtuple
 from tools.XmlParser import XmlParser
-from lxml.etree import Element, ElementTree, SubElement, tostring
+from lxml.etree import Element, ElementTree, SubElement, tostring, fromstring, parse
 from tools.utils import *
 
 __author__ = 'achilles_xushy'
 
 sample_file = 'C:\\Users\\admins\\Desktop\\20170215\\sd_xml.xml'
 
-XML_CONTENT_DICT = {
-    'MCM_NAVIGATION':
-        ['ID', 'PARENT_ID', 'PROVIDER_ID', 'PROPER_TITLE', 'DURATION', 'PROGRAM_CLASS', 'FIELD_1', 'FIELD_2'],
-    'MCM_PROGRAM':
-        ['PROGRAM_CODE', 'PARALLEL_TITLE', 'SUBORDINATE_TITLE', 'ALTERNATIVE_TITLE', 'TITLE_DESC', 'SUBJECT_TERMS',
-         'KEY_WORDS', 'CONTENT_INFO', 'EPISODES_NUMBER', 'SERIES_TITLE', 'SERIES_PARTITLE', 'DATE_EVENT', 'ATTACHMENT',
-         'COPYRIGHT_STATE', 'COPYRIGHT_OWNER', 'PRODUCED_DATE', 'FIRBROAD_DATE', 'PUBLISHED_DATE', 'ADDITIONAL_LOGO',
-         'ISRC', 'SOURCE_ACQUIRED', 'SOURCE_PROVIDER', 'CHARACTER', 'CROWD_TYPE', 'FIELD_1'],
-    'MCM_CREATOR':
-        ['TYPE', 'NAME', 'ROLE_MODE'],
-    'MCM_FILEGROUP':
-        ['FILEGROUPTYPE_ID', 'SUBTITLE_FORM', 'COLOR', 'AUDIO_QUALITY', 'VIDEO_QUALITY', 'MEDIA_TYPE',
-         'VIDEO_BITRATE', 'BROWSE_LENGTH', 'BROWSE_WIDTH'],
-    'MCM_DATAFILE':
-        ['TYPE', 'FILE_MD5', 'DEST_PATH', 'DEST_FILENAME'],
-    'MCM_EXTINFO':
-        ['FIELD_1'],
-    'MCM_MULTIINFO':
-        ['TYPE', 'FIELD_1', 'FIELD_2', 'FIELD_3', 'FIELD_4', 'FIELD_5', 'FIELD_6']
-}
+LAN_LIST = ['zh', 'zh_hk', 'en']
+
 
 file_log = logging.getLogger('file_record')
 
 
 class XmlWriter(object):
-    def __init__(self, xml_name):
+    def __init__(self, xml_name, root_name):
         self.xml_file_name = xml_name
-        self.root_node_name = 'DataSource'
+        self.root_node_name = root_name
         self.root = Element(self.root_node_name)
 
     def append_node_to_root(self, next_node):
@@ -76,20 +58,26 @@ class XmlWriter(object):
     def yield_node_element(node_name, in_dict):
         """
         生成目标节点元素
-        :param root_node_name:
         :param node_name:
         :param in_dict:
         :return:
         """
         root_node = Element(node_name)
-        node_list = XML_CONTENT_DICT[node_name]
-        for x in node_list:
+        for x in in_dict.keys():
             if in_dict.get(x):
                 e_element = SubElement(root_node, x)
                 e_element.text = in_dict[x]
             else:
-                SubElement(root_node, x)
+                e_element = SubElement(root_node, x)
+                e_element.text = ''
         return root_node
+
+    @staticmethod
+    def yield_one_node_element(node_name, node_value=None):
+        element_node = Element(node_name)
+        if node_value:
+            element_node.text = node_value
+        return element_node
 
     def write_xml_file(self):
         """
@@ -98,26 +86,19 @@ class XmlWriter(object):
         """
         et = ElementTree(self.root)
         with open(self.xml_file_name, 'wb') as f:
-            xml_str = tostring(et, encoding='utf-8', method="xml", xml_declaration=True,
+            xml_str = tostring(self.root, encoding='utf-8', method="xml", xml_declaration=True,
                                pretty_print=True, with_tail=True, standalone='no')
             f.write(xml_str)
 
-
-# def get_target_bit_rate(b_rate):
-#     """
-#     根据实际码率返回目标码率
-#     :param b_rate:
-#     :return:800/1500/7500
-#     """
-#     real_bt = int(b_rate)
-#     if 500 <= real_bt <= 1200:
-#         return 800
-#     elif 1200 < real_bt <= 1800:
-#         return 1500
-#     elif 1800 < real_bt <= 10000:
-#         return 7500
-#     else:
-#         return real_bt
+    def get_xml_str(self):
+        """
+        获取生成的xml
+        :return:
+        """
+        et = ElementTree(self.root)
+        xml_str = tostring(et, encoding='utf-8', method="xml", xml_declaration=True,
+                           pretty_print=True, with_tail=True, standalone='no')
+        return xml_str
 
 
 def remove_number_in_name(p_name):
@@ -130,158 +111,154 @@ def remove_number_in_name(p_name):
     return r_p_name
 
 
-def write_xml_to_target_dir(name_tuple, a_id, ret_video_name, video_width, video_height, video_bit_rate, program_dir,
-                            i_p_program_name, big_ext):
-    xml_file_dir_name = '{}/{}.xml'.format(program_dir, i_p_program_name)
+def write_future_xml(xml_dir, p_dict):
+    xml_file_dir_name = '{}/{}.xml'.format(xml_dir, 'metadata')
+    x_writer = XmlWriter(xml_file_dir_name, 'media')
+    id_node = x_writer.yield_one_node_element('id')
+    id_node.text = p_dict['id']
+    x_writer.append_node_to_root(id_node)
 
-    m_navigation = {x: '' for x in XML_CONTENT_DICT['MCM_NAVIGATION']}
-    m_navigation['ID'] = str(a_id)
-    m_navigation['PARENT_ID'] = str(name_tuple.parent_id)
-    m_navigation['PROVIDER_ID'] = str(name_tuple.provider_id)
-    m_navigation['PROPER_TITLE'] = '{}#{}'.format(str(i_p_program_name), str(name_tuple.p_part_num))
-    m_navigation['DURATION'] = str(int(name_tuple.p_program_length) * 60)
-    m_navigation['PROGRAM_CLASS'] = str(name_tuple.program_class)
-    m_navigation['FIELD_1'] = str(name_tuple.tag)
+    meta_node = x_writer.yield_one_node_element('meta')
+    meta_node.text = p_dict['meta']
+    x_writer.append_node_to_root(meta_node)
 
-    m_program = {x: '' for x in XML_CONTENT_DICT['MCM_PROGRAM']}
-    m_program['CONTENT_INFO'] = str(name_tuple.p_program_desc)
-    m_program['EPISODES_NUMBER'] = str(name_tuple.p_part_num)
-    m_program['SERIES_TITLE'] = str(name_tuple.name)
+    drm_node = x_writer.yield_one_node_element('drm')
+    drm_node.text = '0'
+    x_writer.append_node_to_root(drm_node)
 
-    m_creator1 = {x: '' for x in XML_CONTENT_DICT['MCM_CREATOR']}
-    m_creator1['TYPE'] = str(0)
-    if name_tuple.director:
-        m_creator1['NAME'] = str(name_tuple.director)
-    else:
-        m_creator1['NAME'] = '无'
-    m_creator1['ROLE_MODE'] = '导演'
+    m_title = {x: '' for x in LAN_LIST}
+    title_node = x_writer.yield_node_element('title', m_title)
+    x_writer.append_node_to_root(title_node)
 
-    m_creator2 = {x: '' for x in XML_CONTENT_DICT['MCM_CREATOR']}
-    m_creator2['TYPE'] = str(0)
-    if name_tuple.director:
-        m_creator2['NAME'] = str(name_tuple.leading_role)
-    else:
-        m_creator2['NAME'] = '无'
-    m_creator2['ROLE_MODE'] = '主演'
+    m_title2 = {x: '' for x in LAN_LIST}
+    title_node2 = x_writer.yield_node_element('title2', m_title2)
+    x_writer.append_node_to_root(title_node2)
 
-    m_creator3 = {x: '' for x in XML_CONTENT_DICT['MCM_CREATOR']}
-    m_creator3['TYPE'] = str(0)
-    m_creator3['NAME'] = '不详'
-    m_creator3['ROLE_MODE'] = '主持人'
+    type_node = x_writer.yield_one_node_element('type')
+    type_node.text = ''
+    x_writer.append_node_to_root(type_node)
 
-    m_creator4 = {x: '' for x in XML_CONTENT_DICT['MCM_CREATOR']}
-    m_creator4['TYPE'] = str(0)
-    m_creator4['NAME'] = '不详'
-    m_creator4['ROLE_MODE'] = '嘉宾'
+    category_node = x_writer.yield_one_node_element('category')
+    category_node.text = p_dict['program_class']
+    x_writer.append_node_to_root(category_node)
+    #
+    area_node = x_writer.yield_one_node_element('area')
+    area_node.text = p_dict['zone']
+    x_writer.append_node_to_root(area_node)
 
-    m_filegroup1 = {x: '' for x in XML_CONTENT_DICT['MCM_FILEGROUP']}
-    m_filegroup1['VIDEO_BITRATE'] = str(video_bit_rate)
-    m_filegroup1['BROWSE_WIDTH'] = str(video_width)
-    m_filegroup1['BROWSE_LENGTH'] = str(video_height)
+    tag_node = x_writer.yield_one_node_element('tag')
+    tag_node.text = ''
+    x_writer.append_node_to_root(tag_node)
 
-    m_datafile1 = {x: '' for x in XML_CONTENT_DICT['MCM_DATAFILE']}
-    m_datafile1['TYPE'] = str(50)
-    m_datafile1['DEST_PATH'] = '/home/'
-    m_datafile1['DEST_FILENAME'] = str(ret_video_name)  # 视频名字
+    year_node = x_writer.yield_one_node_element('year')
+    year_node.text = p_dict['years']
+    x_writer.append_node_to_root(year_node)
 
-    m_filegroup2 = {x: '' for x in XML_CONTENT_DICT['MCM_FILEGROUP']}
-    m_filegroup2['VIDEO_BITRATE'] = '1'
-    m_filegroup2['BROWSE_WIDTH'] = '1'
-    m_filegroup2['BROWSE_LENGTH'] = '1'
+    release_time_node = x_writer.yield_one_node_element('releaseTime')
+    release_time_node.text = p_dict['update_time']
+    x_writer.append_node_to_root(release_time_node)
 
-    m_datafile2 = {x: '' for x in XML_CONTENT_DICT['MCM_DATAFILE']}
-    m_datafile2['DEST_PATH'] = '/home/'
-    m_datafile2['DEST_FILENAME'] = str(ret_video_name)  # 视频名字
+    score_node = x_writer.yield_one_node_element('score')
+    score_node.text = '100'
+    x_writer.append_node_to_root(score_node)
 
-    m_filegroup3 = {x: '' for x in XML_CONTENT_DICT['MCM_FILEGROUP']}
+    recommend_level_node = x_writer.yield_one_node_element('recommendLevel')
+    recommend_level_node.text = '3'
+    x_writer.append_node_to_root(recommend_level_node)
 
-    m_datafile3 = {x: '' for x in XML_CONTENT_DICT['MCM_DATAFILE']}
-    m_datafile3['TYPE'] = str(100)
-    m_datafile3['DEST_PATH'] = '/home/'
-    m_datafile3['DEST_FILENAME'] = str('h_{}.{}'.format(i_p_program_name, big_ext))  # 图片名字
+    limit_level_node = x_writer.yield_one_node_element('limitLevel')
+    limit_level_node.text = '3'
+    x_writer.append_node_to_root(limit_level_node)
 
-    m_extinfo = {x: '' for x in XML_CONTENT_DICT['MCM_EXTINFO']}
+    total_serial_node = x_writer.yield_one_node_element('totalSerial')
+    total_serial_node.text = ''
+    x_writer.append_node_to_root(total_serial_node)
 
-    m_multinfo1 = {x: '' for x in XML_CONTENT_DICT['MCM_MULTIINFO']}
-    m_multinfo1['TYPE'] = str(102)
-    m_multinfo1['FIELD_3'] = str(name_tuple.years)
+    cur_serial_node = x_writer.yield_one_node_element('curSerial')
+    cur_serial_node.text = ''
+    x_writer.append_node_to_root(cur_serial_node)
 
-    m_multinfo2 = {x: '' for x in XML_CONTENT_DICT['MCM_MULTIINFO']}
-    m_multinfo2['TYPE'] = str(105)
-    m_multinfo2['FIELD_2'] = str(name_tuple.zone)
+    price_node = x_writer.yield_one_node_element('price')
+    price_node.text = '0'
+    x_writer.append_node_to_root(price_node)
 
-    x_writer = XmlWriter(xml_file_dir_name)
-    n_navigation = x_writer.yield_node_element('MCM_NAVIGATION', m_navigation)
-    x_writer.append_node_to_root(n_navigation)
+    duration_node = x_writer.yield_one_node_element('duration')
+    duration_node.text = '24'
+    x_writer.append_node_to_root(duration_node)
 
-    n_program = x_writer.yield_node_element('MCM_PROGRAM', m_program)
-    x_writer.append_node_to_root(n_program)
+    m_actor = {x: '' for x in LAN_LIST}
+    actor_node = x_writer.yield_node_element('actor', m_actor)
+    x_writer.append_node_to_root(actor_node)
 
-    n_creator1 = x_writer.yield_node_element('MCM_CREATOR', m_creator1)
-    x_writer.append_node_to_root(n_creator1)
+    m_director = {x: '' for x in LAN_LIST}
+    director_node = x_writer.yield_node_element('director', m_director)
+    x_writer.append_node_to_root(director_node)
 
-    n_n_creator2 = x_writer.yield_node_element('MCM_CREATOR', m_creator2)
-    x_writer.append_node_to_root(n_n_creator2)
+    m_screen_writer = {x: '' for x in LAN_LIST}
+    screen_writer_node = x_writer.yield_node_element('screenwriter', m_screen_writer)
+    x_writer.append_node_to_root(screen_writer_node)
 
-    n_creator3 = x_writer.yield_node_element('MCM_CREATOR', m_creator3)
-    x_writer.append_node_to_root(n_creator3)
+    m_dialogue = {x: '' for x in LAN_LIST}
+    dialogue_node = x_writer.yield_node_element('dialogue', m_dialogue)
+    x_writer.append_node_to_root(dialogue_node)
 
-    n_creator4 = x_writer.yield_node_element('MCM_CREATOR', m_creator4)
-    x_writer.append_node_to_root(n_creator4)
+    m_description = {x: '' for x in LAN_LIST}
+    m_description['zh'] = p_dict['desc']
+    description_node = x_writer.yield_node_element('description', m_description)
+    x_writer.append_node_to_root(description_node)
 
-    n_filegroup1 = x_writer.yield_node_element('MCM_FILEGROUP', m_filegroup1)
-    n_filegroup2 = x_writer.yield_node_element('MCM_FILEGROUP', m_filegroup2)
-    n_filegroup3 = x_writer.yield_node_element('MCM_FILEGROUP', m_filegroup3)
-    n_datafile1 = x_writer.yield_node_element('MCM_DATAFILE', m_datafile1)
-    n_datafile2 = x_writer.yield_node_element('MCM_DATAFILE', m_datafile2)
-    n_datafile3 = x_writer.yield_node_element('MCM_DATAFILE', m_datafile3)
+    thumbnail_node = x_writer.yield_one_node_element('thumbnail')
+    thumbnail_node.text = 'thumbnail.jpg'
+    x_writer.append_node_to_root(thumbnail_node)
 
-    x_writer.add_node_after_target_node(n_filegroup1, 'BROWSE_WIDTH', n_datafile1)
-    x_writer.add_node_after_target_node(n_filegroup2, 'BROWSE_WIDTH', n_datafile2)
-    x_writer.add_node_after_target_node(n_filegroup3, 'BROWSE_WIDTH', n_datafile3)
-    x_writer.append_node_to_root(n_filegroup1)
-    x_writer.append_node_to_root(n_filegroup2)
-    x_writer.append_node_to_root(n_filegroup3)
+    image_node = x_writer.yield_one_node_element('image')
+    image_node.text = 'image.jpg'
+    x_writer.append_node_to_root(image_node)
 
-    n_extinfo = x_writer.yield_node_element('MCM_EXTINFO', m_extinfo)
-    x_writer.append_node_to_root(n_extinfo)
-    n_multinfo1 = x_writer.yield_node_element('MCM_MULTIINFO', m_multinfo1)
-    x_writer.append_node_to_root(n_multinfo1)
-    n_multinfo2 = x_writer.yield_node_element('MCM_MULTIINFO', m_multinfo2)
-    x_writer.append_node_to_root(n_multinfo2)
+    poster_node = x_writer.yield_one_node_element('poster')
+    poster_node.text = ''
+    x_writer.append_node_to_root(poster_node)
+
+    episodes_node = x_writer.yield_one_node_element('episodes')
+
+    for i_e in p_dict['programs']:
+        epi_node = SubElement(episodes_node, 'episode')
+        ser_node = SubElement(epi_node, 'serial')
+        ser_node.text = i_e['serial']
+
+        tit_node = SubElement(epi_node, 'title')
+        zh_node = SubElement(tit_node, 'zh')
+        zh_node.text = i_e['serial']
+        zh_hk_node = SubElement(tit_node, 'zh_hk')
+        zh_hk_node.text = i_e['serial']
+        en_node = SubElement(tit_node, 'en')
+        en_node.text = i_e['serial']
+
+        thu_node = SubElement(epi_node, 'thumbnail')
+        thu_node.text = ''
+        img_node = SubElement(epi_node, 'image')
+        img_node.text = 'image.jpg'
+    x_writer.append_node_to_root(episodes_node)
 
     x_writer.write_xml_file()
 
 
-def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
+def yield_target_xml_file(name_tuple, video_dir_list):
     """
 
     :param name_tuple:
     :param video_dir_list: 可能的情况，单个文件夹，或者是多个目录
-    :param target_dir:
-    :param xml_p:
     :return:
     """
-
-    small_poster_pic = get_http_file_name(name_tuple.small_poster)
-    medium_poster_pic = get_http_file_name(name_tuple.medium_poster)
-    big_poster_pic = get_http_file_name(name_tuple.big_poster)
-
-    pic_set = {small_poster_pic, medium_poster_pic, big_poster_pic}
-    # have_same_pic = 0
-
-    if len(pic_set) < 3 and small_poster_pic == medium_poster_pic == big_poster_pic:
-        small_poster_pic = 's_' + small_poster_pic
-        medium_poster_pic = 'm_' + medium_poster_pic
-        big_poster_pic = 'h_' + big_poster_pic
-        # have_same_pic = 1
-
-    i_p_program_name = remove_number_in_name(name_tuple.p_program_name)
 
     if name_tuple.p_m_src_url:
         video_name = get_http_file_name(name_tuple.p_m_src_url)
     else:
-        file_log.error('{}-{}-{} 找不到视频文件链接'.format(name_tuple.name, name_tuple.p_part_num, name_tuple.p_program_name))
+        file_log.error('{}-{}-{}-{} 找不到视频文件链接'.
+                       format(name_tuple.id,
+                              name_tuple.name,
+                              name_tuple.p_part_num,
+                              name_tuple.p_program_name))
         return 'ng'
 
     program_dir_dict = OrderedDict()
@@ -316,20 +293,10 @@ def yield_target_xml_file(name_tuple, video_dir_list, target_dir, xml_p):
         mv_files_to_dir(program_dir_dict[program_dir][0],
                         '{}/{}'.format(program_dir, program_dir_dict[program_dir][1]))
 
-    small_ext = small_poster_pic.split('.')[1]
-    medium_ext = medium_poster_pic.split('.')[1]
-    big_ext = big_poster_pic.split('.')[1]
-
     for program_dir in program_dir_dict.keys():
         download_dict = OrderedDict()
-        download_dict['{}/s_{}.{}'.format(program_dir, i_p_program_name, small_ext)] = name_tuple.small_poster
-        download_dict['{}/m_{}.{}'.format(program_dir, i_p_program_name, medium_ext)] = name_tuple.medium_poster
         download_dict['{}/h_{}.{}'.format(program_dir, i_p_program_name, big_ext)] = name_tuple.big_poster
         pic_file_download_txt(download_dict, program_dir)
-
-        write_xml_to_target_dir(name_tuple, 'test', program_dir_dict[program_dir][1],
-                                program_dir_dict[program_dir][2], program_dir_dict[program_dir][3],
-                                program_dir_dict[program_dir][4], program_dir, i_p_program_name, big_ext)
 
     return 'ok'
 
@@ -356,4 +323,15 @@ if __name__ == '__main__':
     # x_w.append_node_to_root(navigation_node)
     # x_w.append_node_to_root(file_group_node)
     # x_w.write_xml_file()
-    pass
+    program_dict = {
+        'i_p_program_name': 'test',
+        'cur_serial': str(1),
+        'programs': [
+            {'serial': '2', 'title': 'show_time', 'image': 'x.jpg'},
+            {'serial': '3', 'title': 'show_time1', 'image': 'x1.jpg'},
+            {'serial': '4', 'title': 'show_time1', 'image': 'x1.jpg'},
+        ]
+    }
+    in_xml_dir = 'C:\\Users\\admins\\Desktop\\20170721'
+    write_future_xml(in_xml_dir, program_dict)
+
