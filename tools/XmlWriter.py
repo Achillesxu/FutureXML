@@ -13,12 +13,11 @@
 """
 
 import logging
-from collections import OrderedDict, namedtuple
-from tools.XmlParser import XmlParser
+
 from lxml.etree import Element, ElementTree, SubElement, tostring, fromstring, parse
+
 from tools.utils import *
 
-__author__ = 'achilles_xushy'
 
 sample_file = 'C:\\Users\\admins\\Desktop\\20170215\\sd_xml.xml'
 
@@ -101,16 +100,6 @@ class XmlWriter(object):
         return xml_str
 
 
-def remove_number_in_name(p_name):
-    res_list = p_name.split('_')
-    try:
-        int(res_list[0])
-        r_p_name = res_list[1]
-    except:
-        r_p_name = p_name
-    return r_p_name
-
-
 def write_future_xml(xml_dir, p_dict):
     xml_file_dir_name = '{}/{}.xml'.format(xml_dir, 'metadata')
     x_writer = XmlWriter(xml_file_dir_name, 'media')
@@ -135,7 +124,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(title_node2)
 
     type_node = x_writer.yield_one_node_element('type')
-    type_node.text = ''
+    type_node.text = p_dict['type']
     x_writer.append_node_to_root(type_node)
 
     category_node = x_writer.yield_one_node_element('category')
@@ -147,7 +136,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(area_node)
 
     tag_node = x_writer.yield_one_node_element('tag')
-    tag_node.text = ''
+    tag_node.text = p_dict['tag']
     x_writer.append_node_to_root(tag_node)
 
     year_node = x_writer.yield_one_node_element('year')
@@ -159,31 +148,31 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(release_time_node)
 
     score_node = x_writer.yield_one_node_element('score')
-    score_node.text = '100'
+    score_node.text = p_dict['score']
     x_writer.append_node_to_root(score_node)
 
     recommend_level_node = x_writer.yield_one_node_element('recommendLevel')
-    recommend_level_node.text = '3'
+    recommend_level_node.text = p_dict['recommendLevel']
     x_writer.append_node_to_root(recommend_level_node)
 
     limit_level_node = x_writer.yield_one_node_element('limitLevel')
-    limit_level_node.text = '3'
+    limit_level_node.text = p_dict['limitLevel']
     x_writer.append_node_to_root(limit_level_node)
 
     total_serial_node = x_writer.yield_one_node_element('totalSerial')
-    total_serial_node.text = ''
+    total_serial_node.text = p_dict['totalSerial']
     x_writer.append_node_to_root(total_serial_node)
 
     cur_serial_node = x_writer.yield_one_node_element('curSerial')
-    cur_serial_node.text = ''
+    cur_serial_node.text = p_dict['curSerial']
     x_writer.append_node_to_root(cur_serial_node)
 
     price_node = x_writer.yield_one_node_element('price')
-    price_node.text = '0'
+    price_node.text = p_dict['price']
     x_writer.append_node_to_root(price_node)
 
     duration_node = x_writer.yield_one_node_element('duration')
-    duration_node.text = '24'
+    duration_node.text = p_dict['duration']
     x_writer.append_node_to_root(duration_node)
 
     m_actor = {x: '' for x in LAN_LIST}
@@ -216,7 +205,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(image_node)
 
     poster_node = x_writer.yield_one_node_element('poster')
-    poster_node.text = ''
+    poster_node.text = p_dict['poster']
     x_writer.append_node_to_root(poster_node)
 
     episodes_node = x_writer.yield_one_node_element('episodes')
@@ -241,64 +230,6 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(episodes_node)
 
     x_writer.write_xml_file()
-
-
-def yield_target_xml_file(name_tuple, video_dir_list):
-    """
-
-    :param name_tuple:
-    :param video_dir_list: 可能的情况，单个文件夹，或者是多个目录
-    :return:
-    """
-
-    if name_tuple.p_m_src_url:
-        video_name = get_http_file_name(name_tuple.p_m_src_url)
-    else:
-        file_log.error('{}-{}-{}-{} 找不到视频文件链接'.
-                       format(name_tuple.id,
-                              name_tuple.name,
-                              name_tuple.p_part_num,
-                              name_tuple.p_program_name))
-        return 'ng'
-
-    program_dir_dict = OrderedDict()
-
-    for video_dir in video_dir_list:
-        video_path_name = '{}/{}'.format(video_dir, video_name)
-
-        if os.path.exists(video_path_name) and os.path.isfile(video_path_name):
-            ret_video_name, video_width, video_height, video_bit_rate = \
-                get_resolution_bit_rate_new_name(video_path_name, i_p_program_name)
-            if ret_video_name == video_width == video_height == video_bit_rate:
-                file_log.error('解析--{}--出错'.format(video_path_name))
-                continue
-            else:
-                suffix_d = os.path.basename(video_dir)
-                program_dir_dict['{}/{}_{}'.format(target_dir, suffix_d, name_tuple.p_program_name)] = \
-                    tuple((video_path_name, ret_video_name, video_width, video_height, video_bit_rate))
-        else:
-            file_log.error('{}-{}-{} 找不到视频文件'.format(name_tuple.name, name_tuple.p_part_num, name_tuple.p_program_name))
-            continue
-
-    if len(program_dir_dict) == 0:
-        return 'ng'
-
-    for program_dir in program_dir_dict.keys():
-        if os.path.exists(program_dir):
-            pass
-        else:
-            mk_dir(program_dir)
-        # move video to dst_dir
-        # TODO 测试稳定后方可打开下面的注释
-        mv_files_to_dir(program_dir_dict[program_dir][0],
-                        '{}/{}'.format(program_dir, program_dir_dict[program_dir][1]))
-
-    for program_dir in program_dir_dict.keys():
-        download_dict = OrderedDict()
-        download_dict['{}/h_{}.{}'.format(program_dir, i_p_program_name, big_ext)] = name_tuple.big_poster
-        pic_file_download_txt(download_dict, program_dir)
-
-    return 'ok'
 
 
 if __name__ == '__main__':

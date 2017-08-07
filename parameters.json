@@ -1,5 +1,5 @@
 {
-  "video_dir": ["C:/Users/admins/Desktop/20170721_v"],
+  "video_dir": "C:/Users/admins/Desktop/20170721_v",
   "target_dir": "C:/Users/admins/Desktop/20170216",
   "full_data_xml": "C:/Users/admins/Desktop/20170721/fullData20170721.xml",
   "category_xml": "C:/Users/admins/Desktop/20170721/cat20170721.xml",

@@ -149,10 +149,7 @@ class XmlParser(object):
                 self.p_m_src_url = media_node.find('srcUrl').text
 
     def output_parameter(self):
-        program = namedtuple('program', ['id', 'name', 'program_class', 'desc', 'tag',
-                                         'director', 'leading_role', 'years', 'zone', 'small_poster', 'medium_poster',
-                                         'big_poster', 'update_time', 'total_count',
-                                         'p_program_series_id', 'p_program_id', 'p_program_name',
+        program = namedtuple('program', ['p_program_series_id', 'p_program_id', 'p_program_name',
                                          'p_program_desc', 'p_part_num', 'p_program_length', 'p_m_src_url'])
 
         if self.p_program_definition:
@@ -162,10 +159,7 @@ class XmlParser(object):
         self.p_program_name = self.p_program_name.replace('/', '-')
         self.update_time = self.update_time.split(' ')[0].replace('-', '')
 
-        out_put = program(self.id, self.name, self.program_class, self.desc, self.tag,
-                          self.director, self.leading_role, self.years, self.zone, self.small_poster, self.medium_poster,
-                          self.big_poster, self.update_time, self.total_count,
-                          self.p_program_series_id, self.p_program_id, self.p_program_name,
+        out_put = program(self.p_program_series_id, self.p_program_id, self.p_program_name,
                           self.p_program_desc, self.p_part_num, self.p_program_length, self.p_m_src_url)
 
         return out_put

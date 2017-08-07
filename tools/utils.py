@@ -32,6 +32,8 @@ q_headers = {
     "Connection": "close"
 }
 
+PIC_JSON_FILE = 'future_pic_download.json'
+
 
 def get_http_file_name(src_url):
     url_output = urlparse(src_url)
@@ -41,7 +43,7 @@ def get_http_file_name(src_url):
 
 
 def pic_file_download_txt(down_url_dict, p_dir):
-    file_d = '{}/pic_download.json'.format(p_dir)
+    file_d = os.path.join(p_dir, PIC_JSON_FILE)
     j_str = json.dumps(down_url_dict, ensure_ascii=False)
     with open(file_d, mode='w', encoding='utf-8') as pf:
         pf.write(j_str)
@@ -85,14 +87,6 @@ def get_resolution_bit_rate_new_name(file_name, real_name):
                 else:
                     bit_rate = int(bit_rate)//1024
 
-                # if 500 <= bit_rate <= 1200:
-                #     bit_rate = 800
-                # elif 1200 < bit_rate <= 1800:
-                #     bit_rate = 1500
-                # elif 1800 < bit_rate <= 10000:
-                #     bit_rate = 7500
-                # else:
-                #     pass
                 bit_rate = str(bit_rate)
                 res_str = real_name + '_' + str(width) + 'x' + str(height) + '_' + bit_rate + 'k.' + suffix_name
                 return res_str, width, height, bit_rate
@@ -104,7 +98,7 @@ def get_resolution_bit_rate_new_name(file_name, real_name):
 
 def mk_dir(dir_name):
     try:
-        os.mkdir(dir_name)
+        os.makedirs(dir_name, exist_ok=True)
     except Exception:
         logging.error(traceback.format_exc())
 

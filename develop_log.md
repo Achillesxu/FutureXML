@@ -19,8 +19,9 @@ author：achilles_xushy
     
 ## 2017-07-31 achilles_xushy
     1. 根据需求修改代码
-    2. 目标文件结构 column--program_name--image--image.jpg
-                                      --media--*.ts
-                                      --xml--*.json, *.xml
+    2. 目标文件结构 column--program_name--|--image--image.jpg
+                                      --|--media--*.ts
+                                      --|--xml--*.json, *.xml
+    3. 设置json文件内容
   
 

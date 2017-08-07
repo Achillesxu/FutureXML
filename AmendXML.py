@@ -22,7 +22,7 @@ import time
 from collections import OrderedDict
 from lxml import etree
 
-from tools.XmlWriter import yield_target_xml_file
+from tools.file_yield_and_move import get_video_and_move_to_dir, get_pic_and_write_json_to_dir
 from tools.XmlParser import XmlParser, XMLParserCategory, XMLParserCateSer
 from tools.utils import *
 
@@ -130,6 +130,96 @@ def read_json_file():
         return None
 
 
+def get_column_name(p_ser_id, cat_obj, cat_ser_obj):
+    try:
+        cat_item_name = cat_obj.cat_dict[cat_ser_obj.big_dict[p_ser_id][1]][1]
+        return cat_item_name
+    except IndexError:
+        cat_item_name = cat_obj.p_cat_dict[p_ser_id]
+        return cat_item_name
+    except:
+        logging.error('programSerial-id---<{}> cant find column name in catxxxxxxx.xml and cat2serxxxxxxxx.xml'.
+                      format(p_ser_id))
+        return ''
+
+
+def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
+    if 'id' not in in_dict:
+        in_dict['id'] = '0'
+    if 'meta' not in in_dict:
+        in_dict['meta'] = meta_dict[col_name][0]
+    if 'title' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        if judge_contain_chinese_chr(xml_obj.name):
+            t_dict['zh'] = xml_obj.name
+        else:
+            t_dict['en'] = xml_obj.name
+        in_dict['title'] = t_dict
+    if 'title2' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        in_dict['title2'] = t_dict
+    if 'type' not in in_dict:
+        in_dict['type'] = meta_dict[col_name][1]
+    if 'category' not in in_dict:
+        in_dict['category'] = xml_obj.program_class
+    if 'area' not in in_dict:
+        if '中国大陆' in xml_obj.zone:
+            in_dict['zone'] = '大陆'
+        else:
+            in_dict['zone'] = xml_obj.zone
+    if 'tag' not in in_dict:
+        in_dict['tag'] = ''
+    if 'year' not in in_dict:
+        in_dict['year'] = xml_obj.years
+    if 'releaseTime' not in in_dict:
+        in_dict['releaseTime'] = xml_obj.update_time
+    if 'score' not in in_dict:
+        in_dict['score'] = '100'
+    if 'recommendLevel' not in in_dict:
+        in_dict['recommendLevel'] = '3'
+    if 'limitLevel' not in in_dict:
+        in_dict['limitLevel'] = '3'
+    if 'totalSerial' not in in_dict:
+        in_dict['totalSerial'] = xml_obj.total_count
+    if 'price' not in in_dict:
+        in_dict['price'] = '0'
+    if 'duration' not in in_dict:
+        in_dict['duration'] = '24'
+    if 'actor' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        if judge_contain_chinese_chr(xml_obj.leading_role):
+            t_dict['zh'] = xml_obj.leading_role
+        else:
+            t_dict['en'] = xml_obj.leading_role
+        in_dict['actor'] = t_dict
+    if 'director' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        if judge_contain_chinese_chr(xml_obj.director):
+            t_dict['zh'] = xml_obj.director
+        else:
+            t_dict['en'] = xml_obj.director
+        in_dict['director'] = t_dict
+    if 'screenwriter' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        in_dict['screenwriter'] = t_dict
+    if 'dialogue' not in in_dict:
+        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        in_dict['dialogue'] = t_dict
+    if 'description' not in in_dict:
+        t_dict = {'zh': xml_obj.desc, 'zh_hk': '', 'en': ''}
+        in_dict['dialogue'] = t_dict
+    if 'thumbnail' not in in_dict:
+        in_dict['thumbnail'] = 'thumbnail.jpg'
+    if 'image' not in in_dict:
+        in_dict['image'] = 'image.jpg'
+    if 'poster' not in in_dict:
+        in_dict['poster'] = ''
+
+
+def update_episode_info(in_dict, xml_obj):
+    pass
+
+
 def parse_main_entrance():
     """
     解析工具主入口
@@ -173,38 +263,44 @@ def parse_main_entrance():
         sys.exit()
 
     # 判断路径参数，是否存在及有效
-    v_dir_list = list()
-    for v_dir in ret_dict['video_dir']:
-        if os.path.exists(v_dir) and os.path.isdir(v_dir):
-            if v_dir[-1] is '/':
-                v_dir_list.append(v_dir[:-1])
-            else:
-                v_dir_list.append(v_dir)
-
-    if len(v_dir_list) == 0:
+    if os.path.exists(ret_dict['video_dir']) and os.path.isdir(ret_dict['video_dir']):
+        video_dir = os.path.normpath(ret_dict['video_dir'])
+    else:
         logging.error('json文件内的video_dir{}--有问题，请检查'.format(ret_dict['video_dir']))
         sys.exit()
 
     if os.path.exists(ret_dict['target_dir']) and os.path.isdir(ret_dict['target_dir']):
-        if ret_dict['target_dir'][-1] is '/':
-            ret_dict['target_dir'] = ret_dict['target_dir'][:-1]
+        target_dir = os.path.normpath(ret_dict['target_dir'])
     else:
-        mk_dir(ret_dict['target_dir'])
+        target_dir = os.path.normpath(ret_dict['target_dir'])
+        mk_dir(target_dir)
 
     program_cnt = 0
     for s_node in x_p.get_next_program_serial_node():
         json_rec_dict = OrderedDict()
         now_json_dict = OrderedDict()
         x_p.get_program_serial_info(s_node)
+
         p_child_list = x_p.get_program_node_list(s_node)
         if p_child_list:
             for c_node in p_child_list:
                 x_p.get_program_info(c_node)
                 name_tuple = x_p.output_parameter()
-                res_yield = yield_target_xml_file(name_tuple, v_dir_list)
-                if res_yield == 'ok':
-                    program_cnt += 1
-                    logging.info('节目计数 {} 节目名：{}'.format(program_cnt, name_tuple.p_program_name))
+                column_name = get_column_name(x_p.id, x_cat, x_cat_ser)
+                if column_name:
+                    res_yield = get_video_and_move_to_dir(name_tuple, video_dir, target_dir, column_name)
+                    if res_yield == 'ok':
+                        get_pic_and_write_json_to_dir(x_p.big_poster, target_dir, column_name)
+                        fill_json_dict(now_json_dict, x_p, column_name, meta_type_dict)
+                        update_episode_info(now_json_dict, x_p)
+                        # TODO get the program info
+                        program_cnt += 1
+                        logging.info('节目计数 {} 节目名：{}'.format(program_cnt, name_tuple.p_program_name))
+                else:
+                    logging.error('programSerial--id--<{}>--name--<{}>--programName--<{}>'
+                                  ' cant find which column is is belongs to'.
+                                  format(x_p.id, x_p.name, x_p.p_program_name))
+                x_p.restore_inner_program_variables()
         x_p.restore_inner_all_variables()
 
 
