@@ -33,6 +33,7 @@ q_headers = {
 }
 
 PIC_JSON_FILE = 'future_pic_download.json'
+XML_JSON_FILE = 'meta_json.json'
 
 
 def get_http_file_name(src_url):
@@ -115,13 +116,17 @@ def mv_files_to_dir(src, dst):
         for x in src:
             try:
                 shutil.move(x, dst)
+                return True
             except IOError:
                 logging.error(traceback.format_exc())
+                return False
     else:
         try:
             shutil.move(src, dst)
+            return True
         except IOError:
             logging.error(traceback.format_exc())
+            return False
 
 
 def copy_file_to_dir(src, dst):
@@ -146,6 +151,24 @@ def rename_file_bat(dir_name):
         os.rename('{}/{}'.format(d_root, src), '{}/{}'.format(d_root, dst_str))
 
 
+def get_date_from_p_name(in_str):
+    pat_p = re.compile(r'\d{8}')
+    gro = pat_p.search(in_str)
+    if gro is None:
+        return in_str
+    else:
+        date_str = gro.group(0)
+        ret_list = pat_p.split(in_str)
+        if '）' in ret_list[1] or ')' in ret_list[1]:
+            return '{}_{}'.format(date_str, ret_list[0][:-1])
+        elif '_' in ret_list[1] and len(ret_list[1]) > 1:
+            return '{}_{}_{}'.format(date_str, ret_list[0], ret_list[1][1:])
+        elif '_' in ret_list[1]:
+            return '{}_{}'.format(date_str, ret_list[0])
+        else:
+            return '{}_{}'.format(date_str, ret_list[0])
+
+
 if __name__ == '__main__':
     # pic_file_download(sample_url, '菜花.jpg', 'C:\\Users\\admins\\Desktop\\20170215')
     # ret_name, r_width, r_height, r_bit_rate = get_resolution_bit_rate_new_name(sample_file, '菜花')
@@ -160,4 +183,15 @@ if __name__ == '__main__':
     # rename_file_bat(sys.argv[1])
     # vi_file = 'D:\\Castlevania.S01E01.mp4'
     # get_resolution_bit_rate_new_name(vi_file, 'test')
-    print(judge_contain_chinese_chr('xx'))
+    # print(judge_contain_chinese_chr('xx'))
+    test_p_name = [
+        '东方时空20170506_',
+        '二战后的日本天皇（上）（20170110）',
+        '军国主义陪葬品“神风特攻”（20170109）',
+        '经济信息联播20170116_',
+        '经济信息联播20170305_01',
+        '香港特区行政长官选举结束',
+    ]
+    for i in test_p_name:
+        r_list = get_date_from_p_name(i)
+        print(r_list)

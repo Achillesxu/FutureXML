@@ -116,6 +116,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(drm_node)
 
     m_title = {x: '' for x in LAN_LIST}
+    m_title.update(p_dict['title'])
     title_node = x_writer.yield_node_element('title', m_title)
     x_writer.append_node_to_root(title_node)
 
@@ -176,18 +177,22 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(duration_node)
 
     m_actor = {x: '' for x in LAN_LIST}
+    m_actor.update(p_dict['actor'])
     actor_node = x_writer.yield_node_element('actor', m_actor)
     x_writer.append_node_to_root(actor_node)
 
     m_director = {x: '' for x in LAN_LIST}
+    m_director.update(p_dict['director'])
     director_node = x_writer.yield_node_element('director', m_director)
     x_writer.append_node_to_root(director_node)
 
     m_screen_writer = {x: '' for x in LAN_LIST}
+    m_screen_writer.update(p_dict['screenwriter'])
     screen_writer_node = x_writer.yield_node_element('screenwriter', m_screen_writer)
     x_writer.append_node_to_root(screen_writer_node)
 
     m_dialogue = {x: '' for x in LAN_LIST}
+    m_dialogue.update(p_dict['dialogue'])
     dialogue_node = x_writer.yield_node_element('dialogue', m_dialogue)
     x_writer.append_node_to_root(dialogue_node)
 
@@ -210,7 +215,7 @@ def write_future_xml(xml_dir, p_dict):
 
     episodes_node = x_writer.yield_one_node_element('episodes')
 
-    for i_e in p_dict['programs']:
+    for i_e in p_dict['episodes']:
         epi_node = SubElement(episodes_node, 'episode')
         ser_node = SubElement(epi_node, 'serial')
         ser_node.text = i_e['serial']

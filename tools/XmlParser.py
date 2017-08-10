@@ -19,6 +19,8 @@ import traceback
 from collections import namedtuple
 from lxml.etree import iterparse, ElementTree
 
+from tools.utils import *
+
 __author__ = 'achilles_xushy'
 
 INPUT_FILE = 'C:\\Users\\admins\\Desktop\\20170721\\fullData20170721.xml'
@@ -156,7 +158,8 @@ class XmlParser(object):
             if self.p_program_definition in self.p_program_name:
                 self.p_program_name = self.p_program_name[len('[' + self.p_program_definition + ']'):]
 
-        self.p_program_name = self.p_program_name.replace('/', '-')
+        # self.p_program_name = self.p_program_name.replace('/', '-')
+        self.p_program_name = get_date_from_p_name(self.p_program_name)
         self.update_time = self.update_time.split(' ')[0].replace('-', '')
 
         out_put = program(self.p_program_series_id, self.p_program_id, self.p_program_name,

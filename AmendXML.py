@@ -23,6 +23,7 @@ from collections import OrderedDict
 from lxml import etree
 
 from tools.file_yield_and_move import get_video_and_move_to_dir, get_pic_and_write_json_to_dir
+from tools.file_yield_and_move import get_programs_json_file_content, put_programs_json_file_content
 from tools.XmlParser import XmlParser, XMLParserCategory, XMLParserCateSer
 from tools.utils import *
 
@@ -107,8 +108,9 @@ def test_open_xml_read_element(input_file):
             program_node_list = list(programs_node)
             for p in program_node_list:
                 p_name = p.find('programName').text
+                pp_name = get_date_from_p_name(p_name[4:])
                 p_part_num = p.find('partNum').text
-                pf.write('\t{}--------{}\n'.format(p_name, p_part_num))
+                pf.write('\t{}--------{}\n'.format(pp_name, p_part_num))
     else:
         print('{file} not exist!!!'.format(file=input_file))
     pf.close()
@@ -209,7 +211,7 @@ def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
         t_dict = {'zh': xml_obj.desc, 'zh_hk': '', 'en': ''}
         in_dict['dialogue'] = t_dict
     if 'thumbnail' not in in_dict:
-        in_dict['thumbnail'] = 'thumbnail.jpg'
+        in_dict['thumbnail'] = ''
     if 'image' not in in_dict:
         in_dict['image'] = 'image.jpg'
     if 'poster' not in in_dict:
@@ -217,7 +219,17 @@ def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
 
 
 def update_episode_info(in_dict, xml_obj):
-    pass
+    if 'episodes' not in in_dict:
+        in_dict['episodes'] = []
+    t_dict = dict()
+    t_dict['serial'] = xml_obj.p_part_num
+    if in_dict['meta'] == '2':
+        t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': xml_obj.p_part_num, 'en': xml_obj.p_part_num}
+    elif in_dict['meta'] == '4' or in_dict['meta'] == '1':
+        t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': '', 'en': ''}
+    t_dict['thumbnail'] = ''
+    t_dict['image'] = 'image.jpg'
+    in_dict['episodes'].append(t_dict)
 
 
 def parse_main_entrance():
@@ -277,23 +289,22 @@ def parse_main_entrance():
 
     program_cnt = 0
     for s_node in x_p.get_next_program_serial_node():
-        json_rec_dict = OrderedDict()
-        now_json_dict = OrderedDict()
+        now_json_dict = OrderedDict()  # record xml info in json
         x_p.get_program_serial_info(s_node)
-
         p_child_list = x_p.get_program_node_list(s_node)
+        need_json = False
         if p_child_list:
+            column_name = get_column_name(x_p.id, x_cat, x_cat_ser)
             for c_node in p_child_list:
                 x_p.get_program_info(c_node)
                 name_tuple = x_p.output_parameter()
-                column_name = get_column_name(x_p.id, x_cat, x_cat_ser)
                 if column_name:
-                    res_yield = get_video_and_move_to_dir(name_tuple, video_dir, target_dir, column_name)
+                    res_yield = get_video_and_move_to_dir(name_tuple, video_dir, target_dir, column_name, x_p.name)
                     if res_yield == 'ok':
-                        get_pic_and_write_json_to_dir(x_p.big_poster, target_dir, column_name)
+                        need_json = True
+                        get_pic_and_write_json_to_dir(x_p.big_poster, target_dir, column_name, x_p.name)
                         fill_json_dict(now_json_dict, x_p, column_name, meta_type_dict)
                         update_episode_info(now_json_dict, x_p)
-                        # TODO get the program info
                         program_cnt += 1
                         logging.info('节目计数 {} 节目名：{}'.format(program_cnt, name_tuple.p_program_name))
                 else:
@@ -301,12 +312,24 @@ def parse_main_entrance():
                                   ' cant find which column is is belongs to'.
                                   format(x_p.id, x_p.name, x_p.p_program_name))
                 x_p.restore_inner_program_variables()
+            if need_json:
+                json_rec_dict = get_programs_json_file_content(target_dir, column_name, x_p.name)
+                if json_rec_dict is None:
+                    # first record xml info into json file
+                    put_programs_json_file_content(target_dir, column_name, x_p.name, now_json_dict)
+                else:
+                    # second append some programs into base json file，update total count and episode info
+                    json_rec_dict['totalSerial'] = now_json_dict['totalSerial']
+                    for i_d in json_rec_dict['episodes']:
+                        json_rec_dict['episodes'].append(i_d)
+                    put_programs_json_file_content(target_dir, column_name, x_p.name, json_rec_dict)
+
         x_p.restore_inner_all_variables()
 
 
 if __name__ == '__main__':
     start_time = time.time()
     # parse_main_entrance()
-    test_open_xml_read_element(INPUT_FILE)
+    # test_open_xml_read_element(INPUT_FILE)
     end_time = time.time()
     logging.info('time <{used_time}> is used'.format(used_time=end_time-start_time))

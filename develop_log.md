@@ -23,5 +23,6 @@ author：achilles_xushy
                                       --|--media--*.ts
                                       --|--xml--*.json, *.xml
     3. 设置json文件内容
+    4. 完成基础代码的编写
   
 
