@@ -74,7 +74,7 @@ def get_pic_and_write_json_to_dir(pic_url, target_dir, col_name, p_name):
     :return:
     """
     f_pic_path = os.path.join(target_dir, col_name, p_name, 'image')
-    if os.path.exists(os.path.join(f_pic_path, 'image.jpg')) or os.path.exists(os.path.join(f_pic_path, 'image.png')):
+    if os.path.exists(os.path.join(f_pic_path, 'image.jpg')):
         return
     # get pic download record to store in json file
     if not os.path.exists(os.path.join(f_pic_path, PIC_JSON_FILE)):

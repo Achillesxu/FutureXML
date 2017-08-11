@@ -19,6 +19,7 @@ import json
 import time
 import argparse
 import requests
+from PIL import Image
 
 from tools.utils import *
 
@@ -32,6 +33,14 @@ d_log.addHandler(s_handler)
 d_log.setLevel(logging.INFO)
 
 
+def png2jpg(in_file):
+    f, e = os.path.splitext(in_file)
+    outfile = f + ".jpg"
+    if in_file != outfile:
+        im = Image.open(in_file)
+        im.convert('RGB').save(outfile, 'JPEG')
+
+
 def download_pic_file(in_url, out_file_name):
     try:
         ret = requests.get(in_url, stream=True)
@@ -40,6 +49,8 @@ def download_pic_file(in_url, out_file_name):
                 for chunk in ret.iter_content(chunk_size=512):
                     if chunk:
                         f.write(chunk)
+            png2jpg(out_file_name)
+            rm_file(out_file_name)
             return True
         else:
             logging.error('download <{}>, http error num <{}>'.format(in_url, ret.status_code))
@@ -59,7 +70,7 @@ def loop_dir_download_pic(target_dir):
                         with open(os.path.join(r_path, PIC_JSON_FILE), encoding='utf-8') as pf:
                             f_dict = json.load(pf)
                             for k, v in f_dict:
-                                ret_val = download_pic_file(os.path.join(r_path, k), v)
+                                ret_val = download_pic_file(v, os.path.join(r_path, k))
                                 if ret_val:
                                     rm_file(os.path.join(r_path, PIC_JSON_FILE))
                                     break
