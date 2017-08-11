@@ -27,6 +27,7 @@ from tools.file_yield_and_move import get_programs_json_file_content, put_progra
 from tools.XmlParser import XmlParser, XMLParserCategory, XMLParserCateSer
 from tools.utils import *
 
+# the following variables just for testing
 INPUT_FILE = 'C:\\Users\\admins\\Desktop\\20170721\\fullData20170721.xml'
 INPUT_FILE1 = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
 INPUT_FILE2 = 'C:\\Users\\admins\\Desktop\\20170721\\cat2ser20170721.xml'
@@ -92,6 +93,7 @@ def test_open_xml_read_element(input_file):
             i_id = child.find('id').text
             pro_name = child.find('name').text
             total_num = child.find('programTotalCount').text
+            big_pic = get_http_file_name(child.find('bigPoster').text)
 
             cat_id = x_cat_ser.big_dict[i_id][1]
             pp_name = x_cat_ser.big_dict[i_id][0]
@@ -101,9 +103,10 @@ def test_open_xml_read_element(input_file):
                 print('{}--{}--{}'.format(i_id, pp_name, cat_id))
                 cat_item_name = x_cat.p_cat_dict[cat_id]
 
-            pf.write('{}+++++total-{}---{}---{}\n'.format(pro_name, total_num,
-                                                          cat_id,
-                                                          cat_item_name))
+            pf.write('{}+++++total-{}---{}---{}----{}\n'.format(pro_name, total_num,
+                                                                cat_id,
+                                                                cat_item_name,
+                                                                big_pic))
             programs_node = child.find('programs')
             program_node_list = list(programs_node)
             for p in program_node_list:
@@ -330,6 +333,6 @@ def parse_main_entrance():
 if __name__ == '__main__':
     start_time = time.time()
     # parse_main_entrance()
-    # test_open_xml_read_element(INPUT_FILE)
+    test_open_xml_read_element(INPUT_FILE)
     end_time = time.time()
     logging.info('time <{used_time}> is used'.format(used_time=end_time-start_time))

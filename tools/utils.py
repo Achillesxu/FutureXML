@@ -50,7 +50,7 @@ def pic_file_download_txt(down_url_dict, p_dir):
         pf.write(j_str)
 
 
-def get_resolution_bit_rate_new_name(file_name, real_name):
+def get_resolution_bit_rate_new_name(file_name, real_name, p_id):
     exe_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if platform.system() == 'Windows':
         cmd_str = "{}\\ffprobe.exe -v quiet -of json -show_format -show_streams -i ".format(exe_dir)
@@ -89,7 +89,7 @@ def get_resolution_bit_rate_new_name(file_name, real_name):
                     bit_rate = int(bit_rate)//1024
 
                 bit_rate = str(bit_rate)
-                res_str = real_name + '_' + str(width) + 'x' + str(height) + '_' + bit_rate + 'k.' + suffix_name
+                res_str = real_name + '_' + p_id + '_' + str(width) + 'x' + str(height) + '_' + bit_rate + 'k.' + suffix_name
                 return res_str, width, height, bit_rate
             except:
                 logging.error('ffprobe json error, error file <{}>, reason--<{}>'.format(file_name,

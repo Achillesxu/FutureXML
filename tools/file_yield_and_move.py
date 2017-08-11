@@ -44,7 +44,7 @@ def get_video_and_move_to_dir(name_tuple, video_dir, target_dir, col_name, p_nam
 
     if os.path.exists(video_path_name) and os.path.isfile(video_path_name):
         ret_video_name, video_width, video_height, video_bit_rate = \
-            get_resolution_bit_rate_new_name(video_path_name, name_tuple.p_program_name)
+            get_resolution_bit_rate_new_name(video_path_name, name_tuple.p_program_name, name_tuple.p_program_id)
         if ret_video_name == video_width == video_height == video_bit_rate:
             file_log.error('解析--{}--出错'.format(video_path_name))
             return 'ng'
@@ -66,6 +66,7 @@ def get_video_and_move_to_dir(name_tuple, video_dir, target_dir, col_name, p_nam
 
 def get_pic_and_write_json_to_dir(pic_url, target_dir, col_name, p_name):
     """
+    check
     :param pic_url:
     :param target_dir:
     :param col_name:
@@ -73,7 +74,8 @@ def get_pic_and_write_json_to_dir(pic_url, target_dir, col_name, p_name):
     :return:
     """
     f_pic_path = os.path.join(target_dir, col_name, p_name, 'image')
-
+    if os.path.exists(os.path.join(f_pic_path, 'image.jpg')) or os.path.exists(os.path.join(f_pic_path, 'image.png')):
+        return
     # get pic download record to store in json file
     if not os.path.exists(os.path.join(f_pic_path, PIC_JSON_FILE)):
         mk_dir(f_pic_path)

@@ -24,5 +24,6 @@ author：achilles_xushy
                                       --|--xml--*.json, *.xml
     3. 设置json文件内容
     4. 完成基础代码的编写
+    5. 完成图片下载与xml生成代码的编写
   
 
