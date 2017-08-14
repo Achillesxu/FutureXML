@@ -21,6 +21,7 @@ import json
 import time
 from collections import OrderedDict
 from lxml import etree
+from contextlib import contextmanager
 
 from tools.file_yield_and_move import get_video_and_move_to_dir, get_pic_and_write_json_to_dir
 from tools.file_yield_and_move import get_programs_json_file_content, put_programs_json_file_content
@@ -139,13 +140,15 @@ def get_column_name(p_ser_id, cat_obj, cat_ser_obj):
     try:
         cat_item_name = cat_obj.cat_dict[cat_ser_obj.big_dict[p_ser_id][1]][1]
         return cat_item_name
-    except IndexError:
-        cat_item_name = cat_obj.p_cat_dict[p_ser_id]
-        return cat_item_name
-    except:
-        logging.error('programSerial-id---<{}> cant find column name in catxxxxxxx.xml and cat2serxxxxxxxx.xml'.
-                      format(p_ser_id))
-        return ''
+    except KeyError:
+        try:
+            cat_id_ = cat_ser_obj.big_dict[p_ser_id][1]
+            cat_item_name = cat_obj.p_cat_dict[cat_id_]
+            return cat_item_name
+        except KeyError:
+            logging.error('programSerial-id---<{}> cant find column name in catxxxxxxx.xml and cat2serxxxxxxxx.xml'.
+                          format(p_ser_id))
+            return ''
 
 
 def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
@@ -205,14 +208,14 @@ def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
             t_dict['en'] = xml_obj.director
         in_dict['director'] = t_dict
     if 'screenwriter' not in in_dict:
-        t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
+        t_dict = {'zh': '无', 'zh_hk': '', 'en': ''}
         in_dict['screenwriter'] = t_dict
     if 'dialogue' not in in_dict:
         t_dict = {'zh': '', 'zh_hk': '', 'en': ''}
         in_dict['dialogue'] = t_dict
     if 'description' not in in_dict:
         t_dict = {'zh': xml_obj.desc, 'zh_hk': '', 'en': ''}
-        in_dict['dialogue'] = t_dict
+        in_dict['description'] = t_dict
     if 'thumbnail' not in in_dict:
         in_dict['thumbnail'] = ''
     if 'image' not in in_dict:
@@ -226,9 +229,9 @@ def update_episode_info(in_dict, xml_obj):
         in_dict['episodes'] = []
     t_dict = dict()
     t_dict['serial'] = xml_obj.p_part_num
-    if in_dict['meta'] == '2':
+    if in_dict['meta'] == 2:
         t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': xml_obj.p_part_num, 'en': xml_obj.p_part_num}
-    elif in_dict['meta'] == '4' or in_dict['meta'] == '1':
+    elif in_dict['meta'] == 4 or in_dict['meta'] == 1:
         t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': '', 'en': ''}
     t_dict['thumbnail'] = ''
     t_dict['image'] = 'image.jpg'
@@ -330,9 +333,18 @@ def parse_main_entrance():
         x_p.restore_inner_all_variables()
 
 
+@contextmanager
+def count_app_run_time():
+    start_time = time.perf_counter()
+    try:
+        yield
+    finally:
+        end_time = time.perf_counter()
+        logging.info('time <{used_time}> is used'.format(used_time=end_time - start_time))
+
+
 if __name__ == '__main__':
-    start_time = time.time()
-    # parse_main_entrance()
-    test_open_xml_read_element(INPUT_FILE)
-    end_time = time.time()
-    logging.info('time <{used_time}> is used'.format(used_time=end_time-start_time))
+    with count_app_run_time():
+        parse_main_entrance()
+        # test_open_xml_read_element(INPUT_FILE)
+

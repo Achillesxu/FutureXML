@@ -39,6 +39,8 @@ def png2jpg(in_file):
     if in_file != outfile:
         im = Image.open(in_file)
         im.convert('RGB').save(outfile, 'JPEG')
+    if in_file != outfile:
+        rm_file(in_file)
 
 
 def download_pic_file(in_url, out_file_name):
@@ -46,11 +48,11 @@ def download_pic_file(in_url, out_file_name):
         ret = requests.get(in_url, stream=True)
         if ret.status_code == 200:
             with open(out_file_name, 'wb') as f:
-                for chunk in ret.iter_content(chunk_size=512):
+                for chunk in ret.iter_content(chunk_size=2048):
                     if chunk:
                         f.write(chunk)
             png2jpg(out_file_name)
-            rm_file(out_file_name)
+
             return True
         else:
             logging.error('download <{}>, http error num <{}>'.format(in_url, ret.status_code))
@@ -69,14 +71,14 @@ def loop_dir_download_pic(target_dir):
                     try:
                         with open(os.path.join(r_path, PIC_JSON_FILE), encoding='utf-8') as pf:
                             f_dict = json.load(pf)
-                            for k, v in f_dict:
-                                ret_val = download_pic_file(v, os.path.join(r_path, k))
-                                if ret_val:
-                                    rm_file(os.path.join(r_path, PIC_JSON_FILE))
-                                    break
-                                else:
-                                    logging.warning('please run this script again, douche bag!!!')
-                                    sys.exit()
+                        for k, v in f_dict.items():
+                            ret_val = download_pic_file(v, os.path.join(r_path, k))
+                            if ret_val:
+                                rm_file(os.path.join(r_path, PIC_JSON_FILE))
+                                break
+                            else:
+                                logging.warning('please run this script again, douche bag!!!')
+                                sys.exit()
                     except:
                         logging.error('file <{}> error, reason <{}>'.
                                       format(os.path.join(r_path, PIC_JSON_FILE), traceback.format_exc()))

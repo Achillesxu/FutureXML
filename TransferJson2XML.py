@@ -49,8 +49,8 @@ if __name__ == '__main__':
     arg_p.add_argument('target_dir', type=str, nargs=1, help='input target dir including all yielded file')
     input_paras = arg_p.parse_args()
     if os.path.exists(input_paras.target_dir[0]) and os.path.isdir(input_paras.target_dir[0]):
-        print(input_paras.target_dir[0])
-        # loop_transfer_json_2_xml(input_paras.target_dir[0])
+        # print(input_paras.target_dir[0])
+        loop_transfer_json_2_xml(input_paras.target_dir[0])
     logging.info('all xml get!!!')
 
 

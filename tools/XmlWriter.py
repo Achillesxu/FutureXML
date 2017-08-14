@@ -100,15 +100,25 @@ class XmlWriter(object):
         return xml_str
 
 
+def return_max_serial_num(in_dict):
+    epi_list = in_dict['episodes']
+    if len(epi_list) == 0:
+        return str(0)
+    elif len(epi_list) == 1:
+        return str(epi_list[0]['serial'])
+    else:
+        return str(max([int(x['serial']) for x in epi_list]))
+
+
 def write_future_xml(xml_dir, p_dict):
-    xml_file_dir_name = '{}/{}.xml'.format(xml_dir, 'metadata')
+    xml_file_dir_name = os.path.join(xml_dir, 'metadata.xml')
     x_writer = XmlWriter(xml_file_dir_name, 'media')
     id_node = x_writer.yield_one_node_element('id')
     id_node.text = p_dict['id']
     x_writer.append_node_to_root(id_node)
 
     meta_node = x_writer.yield_one_node_element('meta')
-    meta_node.text = p_dict['meta']
+    meta_node.text = str(p_dict['meta'])
     x_writer.append_node_to_root(meta_node)
 
     drm_node = x_writer.yield_one_node_element('drm')
@@ -129,7 +139,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(type_node)
 
     category_node = x_writer.yield_one_node_element('category')
-    category_node.text = p_dict['program_class']
+    category_node.text = p_dict['category']
     x_writer.append_node_to_root(category_node)
     #
     area_node = x_writer.yield_one_node_element('area')
@@ -141,11 +151,11 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(tag_node)
 
     year_node = x_writer.yield_one_node_element('year')
-    year_node.text = p_dict['years']
+    year_node.text = p_dict['year']
     x_writer.append_node_to_root(year_node)
 
     release_time_node = x_writer.yield_one_node_element('releaseTime')
-    release_time_node.text = p_dict['update_time']
+    release_time_node.text = p_dict['releaseTime']
     x_writer.append_node_to_root(release_time_node)
 
     score_node = x_writer.yield_one_node_element('score')
@@ -165,7 +175,7 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(total_serial_node)
 
     cur_serial_node = x_writer.yield_one_node_element('curSerial')
-    cur_serial_node.text = p_dict['curSerial']
+    cur_serial_node.text = return_max_serial_num(p_dict)
     x_writer.append_node_to_root(cur_serial_node)
 
     price_node = x_writer.yield_one_node_element('price')
@@ -197,12 +207,12 @@ def write_future_xml(xml_dir, p_dict):
     x_writer.append_node_to_root(dialogue_node)
 
     m_description = {x: '' for x in LAN_LIST}
-    m_description['zh'] = p_dict['desc']
+    m_description.update(p_dict['description'])
     description_node = x_writer.yield_node_element('description', m_description)
     x_writer.append_node_to_root(description_node)
 
     thumbnail_node = x_writer.yield_one_node_element('thumbnail')
-    thumbnail_node.text = 'thumbnail.jpg'
+    thumbnail_node.text = ''
     x_writer.append_node_to_root(thumbnail_node)
 
     image_node = x_writer.yield_one_node_element('image')

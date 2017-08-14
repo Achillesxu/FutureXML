@@ -151,7 +151,7 @@ class XmlParser(object):
                 self.p_m_src_url = media_node.find('srcUrl').text
 
     def output_parameter(self):
-        program = namedtuple('program', ['p_program_series_id', 'p_program_id', 'p_program_name',
+        program = namedtuple('program', ['name', 'p_program_series_id', 'p_program_id', 'p_program_name',
                                          'p_program_desc', 'p_part_num', 'p_program_length', 'p_m_src_url'])
 
         if self.p_program_definition:
@@ -160,9 +160,10 @@ class XmlParser(object):
 
         # self.p_program_name = self.p_program_name.replace('/', '-')
         self.p_program_name = get_date_from_p_name(self.p_program_name)
-        self.update_time = self.update_time.split(' ')[0].replace('-', '')
+        if self.update_time:
+            self.update_time = self.update_time.split(' ')[0].replace('-', '')
 
-        out_put = program(self.p_program_series_id, self.p_program_id, self.p_program_name,
+        out_put = program(self.name, self.p_program_series_id, self.p_program_id, self.p_program_name,
                           self.p_program_desc, self.p_part_num, self.p_program_length, self.p_m_src_url)
 
         return out_put
@@ -333,18 +334,21 @@ if __name__ == '__main__':
     #     print('file invalid')
 
     start_time = time.perf_counter()
-    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat20170721.xml'
-    x_pc = XMLParserCategory()
+    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat2ser20170721.xml'
+    x_pc = XMLParserCateSer()
     ret_v = x_pc.check_xml_file_valid(file_in)
+    fp = open('C:\\Users\\admins\\Desktop\\20170721\\big_dict.txt', mode='w', encoding='utf-8')
     if ret_v:
         x_pc.get_cat_dict()
-        for k, v in x_pc.cat_dict.items():
-            print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-        print('item list len <{}>'.format(len(x_pc.cat_dict)))
-        # for k, v in x_pc.big_dict.items():
+        # for k, v in x_pc.cat_dict.items():
         #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-        # print('item list len <{}>'.format(len(x_pc.big_dict)))
+        # print('item list len <{}>'.format(len(x_pc.cat_dict)))
+        for k, v in x_pc.big_dict.items():
+            print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+            fp.write('key-<{}>, value-<{}-{}>\n'.format(k, v[0], v[1]))
+        print('item list len <{}>'.format(len(x_pc.big_dict)))
     else:
         print('bad op!')
+    fp.close()
     end_time = time.perf_counter()
     print('used time {}'.format(end_time - start_time))
