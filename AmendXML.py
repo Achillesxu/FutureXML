@@ -234,7 +234,8 @@ def update_episode_info(in_dict, xml_obj):
     if in_dict['meta'] == 2:
         t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': xml_obj.p_part_num, 'en': xml_obj.p_part_num}
     elif in_dict['meta'] == 4 or in_dict['meta'] == 1:
-        t_dict['title'] = {'zh': xml_obj.p_part_num, 'zh_hk': '', 'en': ''}
+        new_p_program_name = get_date_from_p_name(xml_obj.p_program_name)
+        t_dict['title'] = {'zh': new_p_program_name, 'zh_hk': '', 'en': ''}
     t_dict['thumbnail'] = ''
     t_dict['image'] = 'image.jpg'
     in_dict['episodes'].append(t_dict)
