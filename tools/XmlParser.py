@@ -18,8 +18,8 @@ import logging
 import traceback
 from collections import namedtuple
 from lxml.etree import iterparse, ElementTree
+from lxml import etree
 
-from tools.utils import *
 
 __author__ = 'achilles_xushy'
 
@@ -158,8 +158,7 @@ class XmlParser(object):
             if self.p_program_definition in self.p_program_name:
                 self.p_program_name = self.p_program_name[len('[' + self.p_program_definition + ']'):]
 
-        # self.p_program_name = self.p_program_name.replace('/', '-')
-        self.p_program_name = get_date_from_p_name(self.p_program_name)
+        self.p_program_name = self.p_program_name.replace('/', '-')
         if self.update_time:
             self.update_time = self.update_time.split(' ')[0].replace('-', '')
 
@@ -314,6 +313,31 @@ class XMLParserCateSer(object):
             self.get_cate_item_node(it)
 
 
+class XMLParserGet(object):
+    def __init__(self):
+        self.xml_file_name = ''
+        self.n_dict = {}
+
+    def check_xml_file_valid(self, xml_file):
+        self.xml_file_name = xml_file
+        is_exist = os.path.exists(self.xml_file_name)
+        suffix = os.path.basename(self.xml_file_name).split('.')[1]
+        if is_exist and suffix == 'xml':
+            return True
+        else:
+            return False
+
+    def get_dict_content(self):
+        doc = etree.ElementTree(file=self.xml_file_name)
+        root = doc.getroot()
+        mc_p_node = root.find('MCM_PROGRAM')
+        num_part = mc_p_node.find('EPISODES_NUMBER').text
+        s_name = mc_p_node.find('SERIES_TITLE').text
+        self.n_dict['num_part'] = num_part
+        self.n_dict['name'] = s_name
+        return self.n_dict
+
+
 if __name__ == '__main__':
     # x_p = XmlParser()
     # ret = x_p.test_xml_file_valid(INPUT_FILE)
@@ -334,21 +358,26 @@ if __name__ == '__main__':
     #     print('file invalid')
 
     start_time = time.perf_counter()
-    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat2ser20170721.xml'
-    x_pc = XMLParserCateSer()
-    ret_v = x_pc.check_xml_file_valid(file_in)
-    fp = open('C:\\Users\\admins\\Desktop\\20170721\\big_dict.txt', mode='w', encoding='utf-8')
-    if ret_v:
-        x_pc.get_cat_dict()
-        # for k, v in x_pc.cat_dict.items():
-        #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-        # print('item list len <{}>'.format(len(x_pc.cat_dict)))
-        for k, v in x_pc.big_dict.items():
-            print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
-            fp.write('key-<{}>, value-<{}-{}>\n'.format(k, v[0], v[1]))
-        print('item list len <{}>'.format(len(x_pc.big_dict)))
-    else:
-        print('bad op!')
-    fp.close()
+    # file_in = 'C:\\Users\\admins\\Desktop\\20170721\\cat2ser20170721.xml'
+    # x_pc = XMLParserCateSer()
+    # ret_v = x_pc.check_xml_file_valid(file_in)
+    # fp = open('C:\\Users\\admins\\Desktop\\20170721\\big_dict.txt', mode='w', encoding='utf-8')
+    # if ret_v:
+    #     x_pc.get_cat_dict()
+    #     # for k, v in x_pc.cat_dict.items():
+    #     #     print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+    #     # print('item list len <{}>'.format(len(x_pc.cat_dict)))
+    #     for k, v in x_pc.big_dict.items():
+    #         print('key-<{}>, value-<{}-{}>'.format(k, v[0], v[1]))
+    #         fp.write('key-<{}>, value-<{}-{}>\n'.format(k, v[0], v[1]))
+    #     print('item list len <{}>'.format(len(x_pc.big_dict)))
+    # else:
+    #     print('bad op!')
+    # fp.close()
+    file_in = 'C:\\Users\\admins\\Desktop\\20170721\\监管加强 “个人购汇”门槛高了？.xml'
+    x_pc = XMLParserGet()
+    if x_pc.check_xml_file_valid(file_in):
+        x_pc.get_dict_content()
+        print(x_pc.n_dict)
     end_time = time.perf_counter()
     print('used time {}'.format(end_time - start_time))

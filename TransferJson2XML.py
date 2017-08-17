@@ -34,7 +34,7 @@ def loop_transfer_json_2_xml(target_dir):
                 try:
                     with open(os.path.join(r_path, XML_JSON_FILE), encoding='utf-8') as pf:
                         f_dict = json.load(pf)
-                        write_future_xml(r_path, f_dict)
+                    write_future_xml(os.path.dirname(r_path), f_dict)
                 except:
                     logging.error('error json <{}>, error reason <{}>'.
                                   format(os.path.join(r_path, XML_JSON_FILE), traceback.format_exc()))

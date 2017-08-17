@@ -77,10 +77,10 @@ def loop_dir_download_pic(target_dir):
                                 rm_file(os.path.join(r_path, PIC_JSON_FILE))
                                 break
                             else:
-                                logging.warning('please run this script again, douche bag!!!')
+                                logging.warning('please run this script again, man!!!')
                                 sys.exit()
                     except:
-                        logging.error('file <{}> error, reason <{}>'.
+                        logging.error('file <{}> error, reason <{}>, run this script again after seconds'.
                                       format(os.path.join(r_path, PIC_JSON_FILE), traceback.format_exc()))
 
 
@@ -108,6 +108,7 @@ if __name__ == '__main__':
             if os.path.exists(input_paras.target_dir[0]) and os.path.isdir(input_paras.target_dir[0]):
                 t_dir = os.path.normpath(input_paras.target_dir[0])
                 loop_dir_download_pic(t_dir)
+                logging.info('all picture downloaded, good job!!!')
             else:
                 logging.error('please check target directory, think twice!!!')
         except:
@@ -116,5 +117,7 @@ if __name__ == '__main__':
         if os.path.exists(input_paras.target_dir[0]) and os.path.isdir(input_paras.target_dir[0]):
             t_dir = os.path.normpath(input_paras.target_dir[0])
             loop_check_exist_json_file(t_dir)
+            logging.info('checked, please check directory again!!!')
         else:
             logging.error('please check target directory, think twice!!!')
+

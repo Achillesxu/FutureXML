@@ -232,11 +232,11 @@ def write_future_xml(xml_dir, p_dict):
 
         tit_node = SubElement(epi_node, 'title')
         zh_node = SubElement(tit_node, 'zh')
-        zh_node.text = i_e['serial']
+        zh_node.text = i_e['title']['zh']
         zh_hk_node = SubElement(tit_node, 'zh_hk')
-        zh_hk_node.text = i_e['serial']
+        zh_hk_node.text = i_e['title']['zh_hk']
         en_node = SubElement(tit_node, 'en')
-        en_node.text = i_e['serial']
+        en_node.text = i_e['title']['en']
 
         thu_node = SubElement(epi_node, 'thumbnail')
         thu_node.text = ''

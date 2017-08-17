@@ -24,6 +24,8 @@ import subprocess
 import json
 import re
 
+from tools.XmlParser import XMLParserGet
+
 sample_url = 'http://images.center.bcs.ottcn.com:8080/poster/2016-12-14/996b4cb5ec0647749db058877ea1eefc.jpg'
 sample_file = 'C:\\Users\\admins\\Desktop\\20170215\\sd_zy_aphts_20111011_1280x720_2500k.ts'
 
@@ -53,11 +55,14 @@ def pic_file_download_txt(down_url_dict, p_dir):
 def get_resolution_bit_rate_new_name(file_name, real_name, p_id):
     exe_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if platform.system() == 'Windows':
+        rep_file_name = '\"{}\"'.format(file_name)
         cmd_str = "{}\\ffprobe.exe -v quiet -of json -show_format -show_streams -i ".format(exe_dir)
+        cmd_str = cmd_str + rep_file_name
     else:
         cmd_str = "ffprobe -v quiet -of json -show_format -show_streams -i "
+        cmd_str = cmd_str + file_name
     # get complete cmd str
-    cmd_str = cmd_str + file_name
+
     suffix_name = os.path.basename(file_name).split('.')[-1]
     # logging.info(cmd_str)
     with subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as pp:
@@ -66,7 +71,7 @@ def get_resolution_bit_rate_new_name(file_name, real_name, p_id):
         std_out = std_out.decode('utf-8', 'replace')
         msg = std_err.strip().split('\n')[-1]
 
-        if msg:
+        if msg or not std_out:
             logging.error('video <{}> parse error, reason <{}>'.format(file_name, msg))
             return '', '', '', ''
         else:
@@ -169,6 +174,28 @@ def get_date_from_p_name(in_str):
             return '{}_{}'.format(date_str, ret_list[0])
 
 
+def get_dir_file_list(in_dir):
+    dir_pat = re.compile(r'^\d{8}_.+')
+    res_list = []
+    for r_path, d_path, files in os.walk(in_dir):
+        b_name = os.path.basename(r_path)
+        if dir_pat.match(b_name):
+            t_dict = {}
+            for i_f in files:
+                if '.ts' in i_f:
+                    t_dict['path'] = r_path
+                    t_dict['ts'] = i_f
+                    t_dict['p_name'] = b_name.split(sep='_', maxsplit=1)[1]
+                elif '.xml' in i_f:
+                    x_pg = XMLParserGet()
+                    x_pg.check_xml_file_valid(os.path.join(r_path, i_f))
+                    name_num_dict = x_pg.get_dict_content()
+                    t_dict.update(name_num_dict)
+            if 'path' in t_dict and 'name' in t_dict:
+                res_list.append(t_dict)
+    return res_list
+
+
 if __name__ == '__main__':
     # pic_file_download(sample_url, '菜花.jpg', 'C:\\Users\\admins\\Desktop\\20170215')
     # ret_name, r_width, r_height, r_bit_rate = get_resolution_bit_rate_new_name(sample_file, '菜花')
@@ -184,14 +211,15 @@ if __name__ == '__main__':
     # vi_file = 'D:\\Castlevania.S01E01.mp4'
     # get_resolution_bit_rate_new_name(vi_file, 'test')
     # print(judge_contain_chinese_chr('xx'))
-    test_p_name = [
-        '东方时空20170506_',
-        '二战后的日本天皇（上）（20170110）',
-        '军国主义陪葬品“神风特攻”（20170109）',
-        '经济信息联播20170116_',
-        '经济信息联播20170305_01',
-        '香港特区行政长官选举结束',
-    ]
-    for i in test_p_name:
-        r_list = get_date_from_p_name(i)
-        print(r_list)
+    # test_p_name = [
+    #     '东方时空20170506_',
+    #     '二战后的日本天皇（上）（20170110）',
+    #     '军国主义陪葬品“神风特攻”（20170109）',
+    #     '经济信息联播20170116_',
+    #     '经济信息联播20170305_01',
+    #     '香港特区行政长官选举结束',
+    # ]
+    # for i in test_p_name:
+    #     r_list = get_date_from_p_name(i)
+    #     print(r_list)
+    pass

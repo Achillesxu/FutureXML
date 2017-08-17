@@ -42,14 +42,50 @@ def get_video_and_move_to_dir(name_tuple, video_dir, target_dir, col_name, p_nam
 
     video_path_name = '{}/{}'.format(video_dir, video_name)
 
+    new_p_program_name = get_date_from_p_name(name_tuple.p_program_name)
     if os.path.exists(video_path_name) and os.path.isfile(video_path_name):
         ret_video_name, video_width, video_height, video_bit_rate = \
-            get_resolution_bit_rate_new_name(video_path_name, name_tuple.p_program_name, name_tuple.p_program_id)
+            get_resolution_bit_rate_new_name(video_path_name, new_p_program_name, name_tuple.p_program_id)
         if ret_video_name == video_width == video_height == video_bit_rate:
             file_log.error('解析--{}--出错'.format(video_path_name))
             return 'ng'
     else:
         file_log.info('{}-{}-{} 找不到视频文件'.format(name_tuple.name, name_tuple.p_part_num, name_tuple.p_program_name))
+        return 'ng'
+
+    f_media_path = os.path.join(target_dir, col_name, p_name, 'media')
+
+    mk_dir(f_media_path)
+
+    if mv_files_to_dir(video_path_name,
+                       os.path.join(f_media_path, ret_video_name)):
+        return 'ok'
+    else:
+        file_log.info('{}-{}-{} 视频文件重复，不能移动'.format(name_tuple.name, name_tuple.p_part_num, name_tuple.p_program_name))
+        return 'ng'
+
+
+def get_video_and_move_to_dir_revise(name_tuple, video_dir, ts_name, target_dir, col_name, p_name):
+    """
+    :param name_tuple:
+    :param video_dir:
+    :param ts_name:
+    :param target_dir:
+    :param col_name:
+    :param p_name:
+    :return:
+    """
+
+    video_path_name = '{}/{}'.format(video_dir, ts_name)
+    new_p_program_name = get_date_from_p_name(name_tuple.p_program_name)
+    if os.path.exists(video_path_name) and os.path.isfile(video_path_name):
+        ret_video_name, video_width, video_height, video_bit_rate = \
+            get_resolution_bit_rate_new_name(video_path_name, new_p_program_name, name_tuple.p_program_id)
+        if ret_video_name == video_width == video_height == video_bit_rate:
+            file_log.error('解析--{}--出错'.format(video_path_name))
+            return 'ng'
+    else:
+        file_log.info('{}-{} 找不到视频文件'.format(name_tuple.name, video_path_name))
         return 'ng'
 
     f_media_path = os.path.join(target_dir, col_name, p_name, 'media')

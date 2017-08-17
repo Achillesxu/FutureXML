@@ -19,12 +19,14 @@ import logging.handlers
 import traceback
 import json
 import time
+import argparse
 from collections import OrderedDict
 from lxml import etree
 from contextlib import contextmanager
 
 from tools.file_yield_and_move import get_video_and_move_to_dir, get_pic_and_write_json_to_dir
 from tools.file_yield_and_move import get_programs_json_file_content, put_programs_json_file_content
+from tools.file_yield_and_move import get_video_and_move_to_dir_revise
 from tools.XmlParser import XmlParser, XMLParserCategory, XMLParserCateSer
 from tools.utils import *
 
@@ -238,11 +240,7 @@ def update_episode_info(in_dict, xml_obj):
     in_dict['episodes'].append(t_dict)
 
 
-def parse_main_entrance():
-    """
-    解析工具主入口
-    :return:
-    """
+def parameters_check_and_get():
     ret_dict = read_json_file()
     if not ret_dict:
         sys.exit()
@@ -293,6 +291,15 @@ def parse_main_entrance():
         target_dir = os.path.normpath(ret_dict['target_dir'])
         mk_dir(target_dir)
 
+    return x_p, x_cat, x_cat_ser, video_dir, target_dir, meta_type_dict
+
+
+def parse_pure_ts_dir_entrance():
+    """
+    解析工具主入口
+    :return:
+    """
+    x_p, x_cat, x_cat_ser, video_dir, target_dir, meta_type_dict = parameters_check_and_get()
     program_cnt = 0
     for s_node in x_p.get_next_program_serial_node():
         now_json_dict = OrderedDict()  # record xml info in json
@@ -333,6 +340,61 @@ def parse_main_entrance():
         x_p.restore_inner_all_variables()
 
 
+def parse_mixed_ts_dir_entrance():
+    x_p, x_cat, x_cat_ser, video_dir, target_dir, meta_type_dict = parameters_check_and_get()
+    file_list = get_dir_file_list(video_dir)
+    f_list_len = len(file_list)
+    p_name_list = [t['name'] for t in file_list]
+    program_cnt = 0
+    for s_node in x_p.get_next_program_serial_node():
+        now_json_dict = OrderedDict()  # record xml info in json
+        x_p.get_program_serial_info(s_node)
+        p_child_list = x_p.get_program_node_list(s_node)
+        need_json = False
+        if p_child_list and x_p.name in p_name_list:
+            column_name = get_column_name(x_p.id, x_cat, x_cat_ser)
+            for c_node in p_child_list:
+                for ts_d in file_list:
+                    x_p.get_program_info(c_node)
+                    name_tuple = x_p.output_parameter()
+                    if column_name and ts_d['p_name'] == name_tuple.p_program_name and ts_d['name'] == x_p.name:
+                        res_yield = get_video_and_move_to_dir_revise(name_tuple, ts_d['path'], ts_d['ts'],
+                                                                     target_dir, column_name, x_p.name)
+                        if res_yield == 'ok':
+                            need_json = True
+                            get_pic_and_write_json_to_dir(x_p.big_poster, target_dir, column_name, x_p.name)
+                            fill_json_dict(now_json_dict, x_p, column_name, meta_type_dict)
+                            update_episode_info(now_json_dict, x_p)
+                            program_cnt += 1
+                            f_list_len -= 1
+                            logging.info('节目计数 {} 节目名：{}'.format(program_cnt, name_tuple.p_program_name))
+                    else:
+                        if not column_name:
+                            logging.error('programSerial--id--<{}>--name--<{}>--programName--<{}>'
+                                          ' cant find which column is is belongs to'.
+                                          format(x_p.id, x_p.name, x_p.p_program_name))
+                        else:
+                            pass
+                x_p.restore_inner_program_variables()
+            if need_json:
+                json_rec_dict = get_programs_json_file_content(target_dir, column_name, x_p.name)
+                if json_rec_dict is None:
+                    # first record xml info into json file
+                    put_programs_json_file_content(target_dir, column_name, x_p.name, now_json_dict)
+                else:
+                    # second append some programs into base json file，update total count and episode info
+                    json_rec_dict['totalSerial'] = now_json_dict['totalSerial']
+                    for i_d in json_rec_dict['episodes']:
+                        json_rec_dict['episodes'].append(i_d)
+                    put_programs_json_file_content(target_dir, column_name, x_p.name, json_rec_dict)
+
+        if f_list_len == 0:
+            logging.info('amazing, all ts file complete!!!')
+            sys.exit()
+
+        x_p.restore_inner_all_variables()
+
+
 @contextmanager
 def count_app_run_time():
     start_time = time.perf_counter()
@@ -344,7 +406,21 @@ def count_app_run_time():
 
 
 if __name__ == '__main__':
-    with count_app_run_time():
-        parse_main_entrance()
-        # test_open_xml_read_element(INPUT_FILE)
+    arg_p = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]),
+                                    usage='python3 %(prog)s mode'
+                                          ' \n----mode(pure ts in video dir if mode=0, or mode=1)',
+                                    description='For example: \n\tpython3 {} mode'
+                                                ' \n----mode(pure ts in video dir if mode=0, or mode=1)'
+                                    .format(os.path.basename(sys.argv[0])))
+    arg_p.add_argument('mode', type=int, nargs=1, choices=[0, 1],
+                       help='select mode for pure ts in video directory or mixed directory')
+    input_paras = arg_p.parse_args()
+    if int(input_paras.mode[0]) == 0:
+        with count_app_run_time():
+            parse_pure_ts_dir_entrance()
+    elif int(input_paras.mode[0]) == 1:
+        with count_app_run_time():
+            parse_mixed_ts_dir_entrance()
+
+    # test_open_xml_read_element(INPUT_FILE)
 
