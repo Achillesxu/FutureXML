@@ -54,15 +54,13 @@ def pic_file_download_txt(down_url_dict, p_dir):
 
 def get_resolution_bit_rate_new_name(file_name, real_name, p_id):
     exe_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    rep_file_name = '\"{}\"'.format(file_name)
     if platform.system() == 'Windows':
-        rep_file_name = '\"{}\"'.format(file_name)
         cmd_str = "{}\\ffprobe.exe -v quiet -of json -show_format -show_streams -i ".format(exe_dir)
-        cmd_str = cmd_str + rep_file_name
     else:
         cmd_str = "ffprobe -v quiet -of json -show_format -show_streams -i "
-        cmd_str = cmd_str + file_name
     # get complete cmd str
-
+    cmd_str = cmd_str + rep_file_name
     suffix_name = os.path.basename(file_name).split('.')[-1]
     # logging.info(cmd_str)
     with subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as pp:
