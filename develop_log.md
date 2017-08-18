@@ -33,6 +33,6 @@ author：achilles_xushy
     3. 修复win下解析视频文件出错问题，主要是文件名及路径中含有空格
     4. 修复linux下解析视频文件出错问题，主要是文件名及路径中含有空格
     5. 如果节目名包含日期，按照预定的格式修改文件名
-    6. 
+    6. revise AmendXML.py line 388 for i_d in now_json_dict['episodes'] 
   
 

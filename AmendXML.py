@@ -334,7 +334,7 @@ def parse_pure_ts_dir_entrance():
                 else:
                     # second append some programs into base json file，update total count and episode info
                     json_rec_dict['totalSerial'] = now_json_dict['totalSerial']
-                    for i_d in json_rec_dict['episodes']:
+                    for i_d in now_json_dict['episodes']:
                         json_rec_dict['episodes'].append(i_d)
                     put_programs_json_file_content(target_dir, column_name, x_p.name, json_rec_dict)
 
@@ -385,7 +385,7 @@ def parse_mixed_ts_dir_entrance():
                 else:
                     # second append some programs into base json file，update total count and episode info
                     json_rec_dict['totalSerial'] = now_json_dict['totalSerial']
-                    for i_d in json_rec_dict['episodes']:
+                    for i_d in now_json_dict['episodes']:
                         json_rec_dict['episodes'].append(i_d)
                     put_programs_json_file_content(target_dir, column_name, x_p.name, json_rec_dict)
 
