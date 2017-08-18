@@ -173,10 +173,13 @@ def fill_json_dict(in_dict, xml_obj, col_name, meta_dict):
     if 'category' not in in_dict:
         in_dict['category'] = xml_obj.program_class
     if 'area' not in in_dict:
-        if '中国大陆' in xml_obj.zone:
-            in_dict['zone'] = '大陆'
+        if xml_obj.zone:
+            if '中国大陆' in xml_obj.zone:
+                in_dict['zone'] = '大陆'
+            else:
+                in_dict['zone'] = xml_obj.zone
         else:
-            in_dict['zone'] = xml_obj.zone
+            in_dict['zone'] = ''
     if 'tag' not in in_dict:
         in_dict['tag'] = ''
     if 'year' not in in_dict:
