@@ -35,5 +35,7 @@ author：achilles_xushy
     5. 如果节目名包含日期，按照预定的格式修改文件名
     6. revise AmendXML.py line 388 for i_d in now_json_dict['episodes']
     7. 修改中国大陆在zone中为空的情况 
-  
+
+## 2017-09-05 achilles_xushy
+    1. judge_contain_chinese_chr 修复节目名为空的情况
 

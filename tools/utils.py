@@ -140,7 +140,10 @@ def copy_file_to_dir(src, dst):
 
 
 def judge_contain_chinese_chr(in_str):
-    return any(0x4E00 <= ord(x) <= 0x9FFF for x in in_str)
+    if in_str and isinstance(in_str, str):
+        return any(0x4E00 <= ord(x) <= 0x9FFF for x in in_str)
+    else:
+        return False
 
 R_pattern = r'_\d+x\d+_\d+k.'
 F_name = 'sd_zy_zzxe10_20120807_1280x720_1500k.ts'
